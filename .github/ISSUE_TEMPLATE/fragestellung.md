@@ -1,5 +1,5 @@
 ---
-name: Feature request
+name: Fragestellung
 about: Frage zu RRZE Bluesky
 title: [Fragestellung]
 labels: 'Status: Review needed 🛂, Type: Question ⁉'
