@@ -1,7 +1,7 @@
 ---
 name: Feature request
 about: Verbesserungsvorschläge für RRZE Bluesky
-title: [Feature Request] möchte ich als [Nutzergruppe]
+title: '[Feature Request] möchte ich als [Nutzergruppe]'
 labels: 'Status: Review needed 🛂, Type: Enhancement 👍'
 assignees: lukasniebler
 
