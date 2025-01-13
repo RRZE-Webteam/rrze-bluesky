@@ -21,6 +21,8 @@ use RRZE\Bluesky\Main;
 const RRZE_PHP_VERSION = '7.4';
 const RRZE_WP_VERSION = '5.8';
 
+require_once __DIR__ . '/vendor/autoload.php';
+
 /**
  * SPL Autoloader (PSR-4).
  * @param string $class The fully-qualified class name.
@@ -90,7 +92,6 @@ function plugin()
  */
 function loaded()
 {
-    add_action('init', __NAMESPACE__ . '\loadTextdomain');
     plugin()->loaded();
     if ($error = systemRequirements()) {
         add_action('admin_init', function () use ($error) {

@@ -18,7 +18,7 @@
  */
 
 
-namespace Bluesky;
+namespace RRZE\Bluesky;
 
 class Profil {
     public string $did;

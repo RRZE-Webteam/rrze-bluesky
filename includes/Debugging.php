@@ -1,7 +1,6 @@
 <?php
 
-
-namespace Bluesky;
+namespace RRZE\Bluesky;
 
 class Debugging
 {

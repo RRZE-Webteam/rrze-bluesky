@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-namespace Bluesky;
+namespace RRZE\Bluesky;
 
 class Lists {
     public string $uri;

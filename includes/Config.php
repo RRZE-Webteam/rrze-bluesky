@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Bluesky;
+namespace RRZE\Bluesky;
 
 class Config {
     private array $config;

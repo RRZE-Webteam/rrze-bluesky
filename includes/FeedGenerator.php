@@ -23,7 +23,7 @@
  * @author Anwender
  */
 
-namespace Bluesky;
+namespace RRZE\Bluesky;
 
 class FeedGenerator {
      // Beispiel-Feed-Daten
