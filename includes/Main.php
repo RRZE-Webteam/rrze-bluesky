@@ -13,6 +13,7 @@ class Main
         // Initialisiere Helper
         new Helper();
         new Settings();
+        new Blocks();
 
         $data_encryption = new Encryption();
         $username = $data_encryption->decrypt(get_option('rrze_bluesky_username'));
