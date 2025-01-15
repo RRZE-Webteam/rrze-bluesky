@@ -57,6 +57,10 @@ class Settings
         if (!get_option('rrze_bluesky_password')) {
             add_option('rrze_bluesky_password', '', '', 'yes');
         }
+
+        if (!get_option('rrze_bluesky_username')) {
+            add_option('rrze_bluesky_username', '', '', 'yes');
+        }
     }
 
     public function registerSettings()

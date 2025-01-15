@@ -42,16 +42,17 @@ class API
         $response = $this->makeRequest($url, "POST", $data);
 
         if (is_wp_error($response)) {
-            error_log("Authentication error: " . $response->get_error_message());
+            Helper::debug("Authentication error: " . $response->get_error_message());
             return null;
         }
 
         if (isset($response['accessJwt'])) {
             $this->token = $response['accessJwt'];
+            Helper::debug ("Access token retrieved successfully.");
             return $this->token;
         }
 
-        error_log("Failed to retrieve access token.");
+        Helper::debug("Failed to retrieve access token.");
         return null;
     }
 
