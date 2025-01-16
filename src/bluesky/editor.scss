@@ -62,4 +62,38 @@
         width: 40px;
         height: 40px;
     }
+
+    svg.bsky-like-icon, svg.bsky-retweet-icon, svg.bsky-reply-icon{
+        width: .9rem;
+        height: .9rem;
+        color: rgb(255, 10, 137);
+    }
+
+    svg.bsky-retweet-icon{
+        color:  rgb(10, 255, 79);
+    }
+
+    svg.bsky-reply-icon{
+        color: rgb(10 122 255);
+    }
+
+    .bsky-stat-section{
+        display: flex;
+        justify-content: space-between;
+        gap: 2rem;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #666;
+
+        svg{
+            margin-right: .5rem;
+        }
+
+        .bsky-stat-icons{
+            display: flex;
+            gap: 2rem;
+            margin-block-start: 1em;
+            margin-block-end: 1em;
+        }
+    }
 }
