@@ -1,4 +1,8 @@
 .wp-block.wp-block-rrze-bluesky-bluesky {
+    header{
+        display: flex;
+        justify-content: space-between;
+    }
    .bsky-post{
     padding: 1rem;
     border: 1px solid #e2e2e2;
@@ -51,5 +55,11 @@
         font-size: 0.9rem;
         color: rgb(10 122 255);
         font-weight: 700;
+    }
+
+    svg.bsky-logo{
+        color: rgb(10 122 255);
+        width: 40px;
+        height: 40px;
     }
 }
