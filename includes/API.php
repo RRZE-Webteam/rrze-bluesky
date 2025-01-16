@@ -8,6 +8,7 @@ class API
 {
     private string $baseUrl = "https://bsky.social/xrpc";
     private ?string $token = null;
+    private ?string $refreshToken = null;
     private ?Config $config = null;
     private $username;
     private $password;
@@ -32,11 +33,15 @@ class API
      */
     public function getAccessToken(): ?string
     {
+        if ($this->token) {
+            return $this->token;
+        }
+
         $url = "{$this->baseUrl}/com.atproto.server.createSession";
 
         $data = [
-            "identifier" => $this->username,
-            "password" => $this->password,
+            "identifier"    => $this->username,
+            "password"      => $this->password,
         ];
 
         $response = $this->makeRequest($url, "POST", $data);
@@ -46,8 +51,9 @@ class API
             return null;
         }
 
-        if (isset($response['accessJwt'])) {
+        if (isset($response['accessJwt']) && isset($response['refreshJwt'])) {
             $this->token = $response['accessJwt'];
+            $this->refreshToken = $response['refreshJwt'];
             Helper::debug ("Access token retrieved successfully.");
             return $this->token;
         }
