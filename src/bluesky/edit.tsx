@@ -1,10 +1,8 @@
 // Imports from WordPress libraries
-import {
-  useBlockProps,
-} from "@wordpress/block-editor";
-
-import apiFetch from '@wordpress/api-fetch';
-import { useEffect, useState } from '@wordpress/element';
+import { useBlockProps } from "@wordpress/block-editor";
+import {__} from "@wordpress/i18n";
+import apiFetch from "@wordpress/api-fetch";
+import { useEffect, useState } from "@wordpress/element";
 
 export interface BskyFeed {
   feed: Array<{
@@ -68,7 +66,7 @@ export interface BskyPost {
       uri: string;
       title: string;
       description: string;
-      thumb: string; 
+      thumb: string;
     };
   };
 
@@ -98,7 +96,6 @@ export interface BskyPost {
     lists: string[];
   };
 }
-
 
 export default function Edit() {
   const [feedData, setFeedData] = useState<BskyFeed | null>(null);
@@ -159,25 +156,25 @@ export default function Edit() {
           replyCount,
           repostCount,
           likeCount,
-          quoteCount,
-          indexedAt,
         } = post;
 
         return (
-          <article key={cid || index}>
+          <article className="bsky-post" key={cid || index}>
             {/* Header Section: Author Info */}
             <header>
-              <h3>{author.displayName || author.handle}</h3>
-              <p>DID: {author.did}</p>
-              {author.createdAt && (
-                <time dateTime={author.createdAt}>
-                  {new Date(author.createdAt).toLocaleString()}
-                </time>
-              )}
+              <div className="author-information">
+                <div>
+                  <img src={author.avatar} alt={author.displayName} />
+                </div>
+                <div className="author-name">
+                  <h3>{author.displayName}</h3>
+                  <p>@{author.handle}</p>
+                </div>
+              </div>
             </header>
 
             {/* Main Post Content */}
-            <section>
+            <section className="bsky-post-content">
               <p>{record.text}</p>
 
               {/* Example: If there’s an embed with an external thumb */}
@@ -187,17 +184,24 @@ export default function Edit() {
                     src={embed.external.thumb}
                     alt={embed.external.description || "Embedded image"}
                   />
-                  <figcaption>{embed.external.title}</figcaption>
                 </figure>
               )}
             </section>
 
             {/* Footer: Post Stats */}
             <footer>
+              <div className="publication-time">
+                {author.createdAt && (
+                  <time dateTime={author.createdAt}>
+                    {new Date(author.createdAt).toLocaleString()}
+                  </time>
+                )}
+              </div>
+              <hr />
               <p>
-                Likes: {likeCount} | Reposts: {repostCount} | Replies: {replyCount} | Quotes: {quoteCount}
+                Likes: {likeCount} | Reposts: {repostCount} | Reply
               </p>
-              <small>Indexed at: {new Date(indexedAt).toLocaleString()}</small>
+              <p className="bsky-reply-count">{__("Read", "rrze-bluesky")} {replyCount} {__("replies on Bluesky", "rrze-bluesky")}</p>
             </footer>
           </article>
         );
