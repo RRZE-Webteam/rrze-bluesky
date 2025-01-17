@@ -59,6 +59,10 @@ export interface BskyPost {
       description: string;
       thumb: string;
     };
+    images?: Array<{
+      thumb: string;
+      alt: string;
+    }>;
   };
   replyCount: number;
   repostCount: number;
@@ -151,6 +155,19 @@ export default function Post({ uri }: PostProps) {
     // indexedAt,
   } = postData;
 
+  let imageSrc: string | undefined = undefined;
+  let imageAlt: string | undefined = undefined;
+
+  if (embed?.images && embed.images.length > 0) {
+    // "images" property => app.bsky.embed.images
+    imageSrc = embed.images[0].thumb; // or "fullsize" if you want bigger images
+    imageAlt = embed.images[0].alt || "Bluesky embedded image";
+  } else if (embed?.external) {
+    // "external" property => app.bsky.embed.external
+    imageSrc = embed.external.uri;
+    imageAlt = embed.external.description || "Bluesky embedded image";
+  } 
+
   return (
     <article className="bsky-post">
       {/* Header Section: Author Info */}
@@ -192,14 +209,12 @@ export default function Post({ uri }: PostProps) {
       {/* Main Post Content */}
       <section className="bsky-post-content">
         <p>{record.text}</p>
-        {embed?.external && (
+        {imageSrc && (
           <figure>
-            <img
-              src={embed.external.thumb}
-              alt={embed.external.description || "Embedded image"}
-            />
+            <img src={imageSrc} alt={imageAlt || "Embedded image"} />
           </figure>
         )}
+
       </section>
 
       {/* Footer: Post Stats */}
