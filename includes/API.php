@@ -22,6 +22,12 @@ class API
         if (!empty($this->config) && !empty($this->config->get('service_baseurl'))) {
             $this->baseUrl = $this->config->get('service_baseurl');
         }
+
+        $storedRefreshToken = get_transient('rrze_bluesky_refresh_token');
+        if ($storedRefreshToken) {
+            $this->refreshToken = $storedRefreshToken;
+            Helper::debug('Loaded refresh token from transient.');
+        }
     }
 
     /**
@@ -51,9 +57,21 @@ class API
             return null;
         }
 
+        Helper::debug($response);
+
         if (isset($response['accessJwt']) && isset($response['refreshJwt'])) {
             $this->token = $response['accessJwt'];
             $this->refreshToken = $response['refreshJwt'];
+            // Store refresh token in transient
+            // * If the server provides an expiration time for refresh tokens, use it!
+            // * Otherwise, store it for a default (e.g. 1 day).
+            $expirationInSeconds = 1200;
+            set_transient(
+                'rrze_bluesky_refresh_token',
+                $this->refreshToken,
+                $expirationInSeconds
+            );
+
             Helper::debug ("Access token retrieved successfully.");
             return $this->token;
         }
@@ -364,6 +382,8 @@ class API
         $response = ($method === "POST")
             ? wp_remote_post($url, $args)
             : wp_remote_get($url, $args);
+
+        Helper::debug($response);    
 
         if (is_wp_error($response)) {
             return $response; // WP_Error-Objekt zurückgeben

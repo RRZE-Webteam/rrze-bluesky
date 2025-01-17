@@ -1,20 +1,21 @@
 .wp-block.wp-block-rrze-bluesky-bluesky {
-    header{
+    header {
         display: flex;
         justify-content: space-between;
     }
-   .bsky-post{
-    padding: 1rem;
-    border: 1px solid #e2e2e2;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-    margin-top: 1rem;
-   }
+
+    .bsky-post {
+        padding: 1rem;
+        border: 1px solid #e2e2e2;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        margin-top: 1rem;
+    }
 
     .author-information {
         display: flex;
         align-items: center;
-        
+
     }
 
     .author-information img {
@@ -40,7 +41,7 @@
         }
     }
 
-    .publication-time{
+    .publication-time {
         font-size: 0.9rem;
         color: #666;
     }
@@ -57,27 +58,29 @@
         font-weight: 700;
     }
 
-    svg.bsky-logo{
+    svg.bsky-logo {
         color: rgb(10 122 255);
         width: 40px;
         height: 40px;
     }
 
-    svg.bsky-like-icon, svg.bsky-retweet-icon, svg.bsky-reply-icon{
+    svg.bsky-like-icon,
+    svg.bsky-retweet-icon,
+    svg.bsky-reply-icon {
         width: .9rem;
         height: .9rem;
         color: rgb(255, 10, 137);
     }
 
-    svg.bsky-retweet-icon{
-        color:  rgb(10, 255, 79);
+    svg.bsky-retweet-icon {
+        color: rgb(10, 255, 79);
     }
 
-    svg.bsky-reply-icon{
+    svg.bsky-reply-icon {
         color: rgb(10 122 255);
     }
 
-    .bsky-stat-section{
+    .bsky-stat-section {
         display: flex;
         justify-content: space-between;
         gap: 2rem;
@@ -85,15 +88,57 @@
         font-weight: 700;
         color: #666;
 
-        svg{
+        svg {
             margin-right: .5rem;
         }
 
-        .bsky-stat-icons{
+        .bsky-stat-icons {
             display: flex;
             gap: 2rem;
-            margin-block-start: 1em;
-            margin-block-end: 1em;
+            margin-block-start: .1em;
+            margin-block-end: .1em;
+        }
+
+        .bsky-reply {
+            margin-block-start: .1em;
+            margin-block-end: .1em;
+
+            a {
+                text-decoration: none;
+            }
+
+            a:hover,
+            a:target {
+                text-decoration: underline;
+            }
+        }
+
+        .bsky-comment-info a svg:hover {
+            color: #04316a;
+            margin-top: .01rem;
+        }
+    }
+
+    .bsky-branding svg {
+        &:hover{
+            transform: rotate(10deg);
+            transition: transform 0.125s;
+            color: #04316a;
+        }
+    }
+
+    .author-information {
+        img:hover{
+            border-radius: 0;
+            transition: border-radius 0.5s;
+        }
+        
+        a {
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
         }
     }
 }

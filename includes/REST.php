@@ -2,6 +2,9 @@
 
 namespace RRZE\Bluesky;
 
+use WP_Error;
+use WP_REST_Request;
+
 defined('ABSPATH') || exit;
 
 class REST
@@ -45,6 +48,7 @@ class REST
         register_rest_route('rrze-bluesky/v1', '/public-timeline', [
             'methods' => 'GET',
             'callback' => [$this, 'getPublicTimeline'],
+            'permission_callback' => [$this, 'permissionCheck'],
         ]);
 
         // register_rest_route('rrze_bluesky/v1', '/list', [
@@ -73,10 +77,30 @@ class REST
         if (!$token) {
             Helper::debug('Fehler bei der Authentifizierung.');
         } else {
-            Helper::debug('Erfolgreich authentifiziert. Token:', $token);
+            Helper::debug('Erfolgreich authentifiziert. Token:');
+            Helper::debug($token);
         }
 
         $timeline = $api->getPublicTimeline();
+        Helper::debug($timeline);
         return $timeline;
+    }
+
+    /**
+     * Check if user can access this REST endpoint
+     */
+    public function permissionCheck(WP_REST_Request $request)
+    {
+        // Example: Check if user is logged in
+        if (!is_user_logged_in()) {
+            return new WP_Error(
+                'rest_forbidden',
+                esc_html__('You are not allowed to access this endpoint.', 'text-domain'),
+                ['status' => 401]
+            );
+        }
+
+        // Optionally check for capabilities: current_user_can('manage_options')
+        return true;
     }
 }
