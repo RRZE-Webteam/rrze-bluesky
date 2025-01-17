@@ -3,6 +3,8 @@ import { useBlockProps } from "@wordpress/block-editor";
 // import { __ } from "@wordpress/i18n";
 import PublicTimeline from "./PublicTimeline";
 import Post from "./Post";
+//import player scss
+import "./player.scss";
 
 export interface BskyFeed {
   feed: Array<{
@@ -102,7 +104,7 @@ export default function Edit() {
   return (
     <div {...blockProps}>
       <PublicTimeline />
-      <Post uri="https://bsky.app/profile/ej64ojyw.bsky.social/post/3lfff6tz2oc2m" />
+      <Post uri="https://bsky.app/profile/imposteredits.bsky.social/post/3lfttv235gc2c" />
     </div>
   );
 }

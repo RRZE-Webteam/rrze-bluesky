@@ -2,6 +2,7 @@
 import { useEffect, useState } from "@wordpress/element";
 import apiFetch from "@wordpress/api-fetch";
 import { __ } from "@wordpress/i18n";
+import { RRZEVidstackPlayer as Vidstack } from "./Vidstack";
 
 // You can reuse these interfaces or import them if you have them in a shared file
 export interface BskyPost {
@@ -55,14 +56,16 @@ export interface BskyPost {
     $type: string;
     external: {
       uri: string;
-      title: string;
-      description: string;
-      thumb: string;
+      title?: string;
+      description?: string;
+      thumb?: string;
     };
     images?: Array<{
       thumb: string;
       alt: string;
     }>;
+    playlist?: string;
+    thumbnail?: string;
   };
   replyCount: number;
   repostCount: number;
@@ -158,6 +161,8 @@ export default function Post({ uri }: PostProps) {
   let imageSrc: string | undefined = undefined;
   let imageAlt: string | undefined = undefined;
 
+  const isVideoEmbed = embed?.$type === "app.bsky.embed.video#view";
+
   if (embed?.images && embed.images.length > 0) {
     // "images" property => app.bsky.embed.images
     imageSrc = embed.images[0].thumb; // or "fullsize" if you want bigger images
@@ -214,6 +219,17 @@ export default function Post({ uri }: PostProps) {
             <img src={imageSrc} alt={imageAlt || "Embedded image"} />
           </figure>
         )}
+        {isVideoEmbed && (
+          <div className="bsky-video">
+            <Vidstack
+              title="Test"
+              mediaurl={embed?.playlist || ""}
+              aspectratio="9/16"
+              poster={embed?.thumbnail || ""}
+            />
+          </div>
+        )}
+
 
       </section>
 

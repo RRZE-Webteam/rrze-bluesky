@@ -53,5 +53,10 @@
 		"eslint-plugin-tsdoc": "^0.4.0",
 		"ts-loader": "^9.5.1",
 		"typescript": "^5.7.2"
+	},
+	"dependencies": {
+		"@vidstack/react": "^1.12.9",
+        "hls.js": "^1.5.15",
+        "vidstack": "^1.12.9"
 	}
 }
