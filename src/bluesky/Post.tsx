@@ -143,7 +143,6 @@ export default function Post({ uri }: PostProps) {
   }
 
   if (!postData) {
-    // Could be empty or an error. Possibly a 404 if no data returned
     return <p>No post data found.</p>;
   }
 
@@ -154,24 +153,9 @@ export default function Post({ uri }: PostProps) {
     likeCount,
     replyCount,
     repostCount,
-    // quoteCount,
-    // indexedAt,
   } = postData;
 
-  let imageSrc: string | undefined = undefined;
-  let imageAlt: string | undefined = undefined;
-
   const isVideoEmbed = embed?.$type === "app.bsky.embed.video#view";
-
-  if (embed?.images && embed.images.length > 0) {
-    // "images" property => app.bsky.embed.images
-    imageSrc = embed.images[0].thumb; // or "fullsize" if you want bigger images
-    imageAlt = embed.images[0].alt || "Bluesky embedded image";
-  } else if (embed?.external) {
-    // "external" property => app.bsky.embed.external
-    imageSrc = embed.external.uri;
-    imageAlt = embed.external.description || "Bluesky embedded image";
-  } 
 
   return (
     <article className="bsky-post">
@@ -214,9 +198,30 @@ export default function Post({ uri }: PostProps) {
       {/* Main Post Content */}
       <section className="bsky-post-content">
         <p>{record.text}</p>
-        {imageSrc && (
+        {embed?.images && embed.images.length > 0 && (
+          <div className="bsky-image-gallery">
+            {embed.images.map((img, idx) => {
+              const altText = img.alt || "Bluesky embedded image";
+              const thumb = img.thumb;
+              return (
+                <figure key={idx}>
+                  {thumb ? (
+                    <img src={thumb} alt={altText} />
+                  ) : (
+                    <p>[No image URL]</p>
+                  )}
+                </figure>
+              );
+            })}
+          </div>
+        )}
+
+        {embed?.external && !embed.images && (
           <figure>
-            <img src={imageSrc} alt={imageAlt || "Embedded image"} />
+            <img
+              src={embed.external.thumb || embed.external.uri}
+              alt={embed.external.description || "Bluesky embedded image"}
+            />
           </figure>
         )}
         {isVideoEmbed && (

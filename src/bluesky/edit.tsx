@@ -105,6 +105,7 @@ export default function Edit() {
     <div {...blockProps}>
       <PublicTimeline />
       <Post uri="https://bsky.app/profile/imposteredits.bsky.social/post/3lfttv235gc2c" />
+      <Post uri="https://bsky.app/profile/knoebel.bsky.social/post/3lfufbojaus24" />
     </div>
   );
 }
