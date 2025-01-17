@@ -26,7 +26,7 @@ class Post {
     public string $cid;
     public string $createdAt;
     public string $indexedAt;
-    public ?Profil $autor;
+    public ?Profil $author;
     public ?array $embeds;
     public ?array $facets;
     public ?array $langs;
@@ -58,7 +58,7 @@ class Post {
         $this->replyCount= (int) ($data['replyCount'] ?? 0);
         $this->quoteCount= (int) ($data['quoteCount'] ?? 0);       
         
-        $this->autor = new Profil($data['author']);
+        $this->author = new Profil($data['author']);
         $this->viewer = $data['viewer'] ?? null;    
         $this->labels = $data['labels'] ?? null;   
         $this->config = $config ?? null;
@@ -87,7 +87,7 @@ class Post {
         return $this->config = $config;
     }
     public function getAutorHandle(): ?string {
-        return $this->autor->handle ?? null;
+        return $this->author->handle ?? null;
     }
 
   
@@ -116,7 +116,7 @@ class Post {
             $template = '';
             $template .= "Text (ex.) : #textexcerpt#".PHP_EOL;
             $template .= "Tags       : #tags#".PHP_EOL;
-            $template .= "Author     : #autor#".PHP_EOL;
+            $template .= "Author     : #author#".PHP_EOL;
             $template .= "Created at : #created#".PHP_EOL;
             $template .= "Stats      : #likes# Likes, #reposts# Reposts, #replys# Replys".PHP_EOL;
             $template .= "Bluesky URL: #blueskyurl#".PHP_EOL;
@@ -129,11 +129,10 @@ class Post {
         }
         $textExcerpt = $this->text ? substr(str_replace(["\r", "\n"], ' ', $this->text), 0, $limit)
         : 'N/A';
-         
-         
+        
         // Platzhalter mit den entsprechenden Werten ersetzen
         $replacements = [
-            '#autor#' => $this->getAutorHandle() ?? 'N/A',
+            '#author#' => $this->getAutorHandle() ?? 'N/A',
             '#text#' => $this->text ?? 'N/A',
             '#textexcerpt#' => $textExcerpt,
             '#created#' => $this->createdAt ?? 'N/A',

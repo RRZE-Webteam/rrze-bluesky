@@ -115,7 +115,7 @@ class API
      * @param string $uri . Bspw: at://did:plc:wyxbu4v7nqt6up3l3camwtnu/app.bsky.feed.post/3lemy4yerrk27
      * @return array|null . Die Daten des Posts, wenn gefunden
      */
-    public function getPosts(string $uri): ?Post
+    public function getPosts(string $uri)
     {
         if (!$this->token) {
             throw new \Exception("Access token is required. Call getAccessToken() first.");
@@ -128,6 +128,8 @@ class API
         // API-Aufruf über die makeRequest-Methode
         $response = $this->makeRequest($url, "GET", $data);
 
+        Helper::debug("response");
+        Helper::debug($response);
         if (!$response || empty($response['posts'])) {
             error_log("No post found for: $uri");
             return null;
@@ -135,9 +137,8 @@ class API
 
         // Den ersten Post im Array nehmen (da wir nur einen URI übergeben haben)
         $postData = $response['posts'][0];
-
         // Rückgabe des Posts als Post-Objekt
-        return new Post($postData);
+        return $postData;
     }
 
 
@@ -282,10 +283,10 @@ class API
     public function getProfile(array $search): ?Profil
     {
         if (!$this->token) {
-            throw new \Exception("Access token is required. Call getAccessToken() first.");
+            Helper::debug("Access token is required. Call getAccessToken() first.");
         }
         if (empty($search['actor'])) {
-            throw new \InvalidArgumentException('Required field actor (Handle or DID of account to fetch profile of.) missing.');
+            Helper::debug('Required field actor (Handle or DID of account to fetch profile of.) missing.');
         }
         $url = "{$this->baseUrl}/app.bsky.actor.getProfile";
 
@@ -382,8 +383,6 @@ class API
         $response = ($method === "POST")
             ? wp_remote_post($url, $args)
             : wp_remote_get($url, $args);
-
-        Helper::debug($response);    
 
         if (is_wp_error($response)) {
             return $response; // WP_Error-Objekt zurückgeben
