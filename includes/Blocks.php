@@ -2,6 +2,8 @@
 
 namespace RRZE\Bluesky;
 
+use RRZE\Bluesky\Render;
+
 defined('ABSPATH') || exit;
 
 class Blocks
@@ -18,6 +20,20 @@ class Blocks
     public function rrze_rrze_bluesky_block_init()
     {
         $this->rrze_register_blocks_and_translations();
+        $this->rrze_register_style();
+    }
+
+    /**
+     * Register the block styles for the frontend.
+     */
+    private function rrze_register_style()
+    {
+        wp_register_style(
+            'rrze-bluesky',
+            plugins_url('css/rrze-bluesky.css', __DIR__),
+            [],
+            filemtime(plugin_dir_path(__DIR__) . 'css/rrze-bluesky.css')
+        );
     }
 
     /**
@@ -30,7 +46,9 @@ class Blocks
         ];
 
         foreach ($blocks as $block) {
-            register_block_type(plugin_dir_path(__DIR__) . 'build/' . $block);
+            register_block_type(plugin_dir_path(__DIR__) . 'build/' . $block, [
+                'render_callback' => [Render::class, 'renderBlock'],
+            ]);
 
             load_plugin_textdomain('rrze-bluesky', false, dirname(plugin_basename(__DIR__)) . 'languages');
 

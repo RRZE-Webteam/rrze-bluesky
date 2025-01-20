@@ -105,7 +105,6 @@ function getPostUrl(handle: string, postUri: string): string {
 }
 
 interface PostProps {
-  /** The user-supplied Bluesky link or at:// URI */
   uri: string;
 }
 
