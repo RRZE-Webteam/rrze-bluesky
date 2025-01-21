@@ -26,7 +26,7 @@ class Render
      */
     public static function renderBlock($args = [
         'publicTimeline' => false,
-        'uri'            => 'https://bsky.app/profile/knoebel.bsky.social/post/3lfufbojaus24',
+        'uri'            => '',
         'limit'          => 10,
     ])
     {
@@ -36,7 +36,7 @@ class Render
 
         $isPublicTimeline = !empty($args['publicTimeline']);
         $uri             = isset($args['uri']) ? trim($args['uri']) : '';
-        $uri =  'https://bsky.app/profile/der-postillon.com/post/3lg6e3d3f7u2s';
+        $uri =  'https://bsky.app/profile/visdoms.bsky.social/post/3lgablq3pok2m';
         $limit           = isset($args['limit']) ? (int) $args['limit'] : 10;
 
         // If publicTimeline is set, show timeline
@@ -86,7 +86,7 @@ class Render
      * @param array|null $postData The post data array.
      * @return string Generated HTML string.
      */
-    public function renderPost($postData)
+    public function renderPost($postData, $hideFooter = false)
     {
         if (!$postData || !is_array($postData)) {
             return '<p>No post data found.</p>';
@@ -112,6 +112,8 @@ class Render
 
         // Check if this is a video embed
         $isVideoEmbed = (isset($embed['$type']) && $embed['$type'] === 'app.bsky.embed.video#view');
+        // Check if this is an embedded record
+        $isRecordEmbed = (isset($embed['$type']) && $embed['$type'] === 'app.bsky.embed.record#view');
 
         // Start building HTML
         $html  = '<div class="wp-block-rrze-bluesky-bluesky"><article class="bsky-post">';
@@ -208,6 +210,12 @@ class Render
             $html .= '</div>';
         }
 
+        if ($isRecordEmbed && !empty($embed['record'])) {
+            $html .= '<div class="bsky-embedded-post">';
+            $html .= $this->renderEmbeddedRecord($embed['record']);
+            $html .= '</div>';
+        }
+
         $html .= '  </section>';
 
         // Footer with post stats
@@ -224,6 +232,7 @@ class Render
         }
 
         $html .= '    </div>';
+        if (!$hideFooter) {
         $html .= '    <hr />';
         $html .= '    <div class="bsky-stat-section">';
         $html .= '      <div class="bsky-stat-icons">';
@@ -261,6 +270,7 @@ class Render
         $html .= '      </div>';
 
         $html .= '    </div>';
+        }
         $html .= '  </footer>';
         $html .= '</article></div>';
 
@@ -364,5 +374,41 @@ class Render
         $parts  = explode('/', $postUri);
         $postId = end($parts);
         return 'https://bsky.app/profile/' . rawurlencode($handle) . '/post/' . rawurlencode($postId);
+    }
+
+    /**
+     * Renders an embedded "record" post (app.bsky.embed.record#view).
+     * We transform it into a normal post-data structure, then reuse renderPost().
+     *
+     * @param array $recordData Typically $embed['record'] from the parent post.
+     * @return string HTML snippet
+     */
+    protected function renderEmbeddedRecord(array $recordData): string
+    {
+        if (empty($recordData) || !is_array($recordData)) {
+            return '<p class="bsky-embedded-error">No valid embedded record data found.</p>';
+        }
+
+        // The "value" sub-array is the actual post content.
+        if (empty($recordData['value']) || !is_array($recordData['value'])) {
+            return '<p class="bsky-embedded-error">Embedded record has no post content.</p>';
+        }
+
+        // Re-map the embedded record into $postData so renderPost() can handle it
+        $embeddedPost = [
+            'author'      => $recordData['author'] ?? [],
+            'record'      => $recordData['value']  ?? [],
+            'uri'         => $recordData['uri']    ?? '',
+            'likeCount'   => $recordData['likeCount']   ?? 0,
+            'replyCount'  => $recordData['replyCount']  ?? 0,
+            'repostCount' => $recordData['repostCount'] ?? 0,
+            // If the embed record can contain further 'embed's, map them as well:
+            'embed'       => $recordData['embeds'][0] ?? [],
+        ];
+
+        // Wrap in a container for styling
+        return '<div class="bsky-embedded-record">'
+            . $this->renderPost($embeddedPost, true)
+            . '</div>';
     }
 }
