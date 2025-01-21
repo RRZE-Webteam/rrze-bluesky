@@ -10,6 +10,12 @@
   border-radius: 8px;
   transition: all 0.5s;
 }
+.wp-block-rrze-bluesky-bluesky .bsky-external-domain-host {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0;
+  margin-top: 0;
+}
 .wp-block-rrze-bluesky-bluesky .bsky-external-heading {
   font-size: 1rem;
   text-decoration: none;

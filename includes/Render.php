@@ -186,6 +186,12 @@ class Render
             if (!empty($extDesc)) {
                 $html .= '<p  class="bsky-external-teaser">' . esc_html($extDesc) . '</p>';
             }
+            if (!empty($extUri)) {
+                $html .= '<hr />';
+                $parsedUrl = parse_url($extUri);
+                $domain = isset($parsedUrl['host']) ? $parsedUrl['host'] : $extUri;
+                $html .= '<p class="bsky-external-domain-host">' . esc_html($domain) . '</p>';
+            }
             $html .= '</figcaption>';
             $html .= '</figure>';
         }

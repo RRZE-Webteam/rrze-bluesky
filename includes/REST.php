@@ -88,6 +88,13 @@ class REST
             );
         }
 
+        $cache_key = 'rrze_bluesky_post_' . md5($uri);
+        $cached_post = get_transient($cache_key);
+
+        if ($cached_post !== false) {
+            return $cached_post;
+        }
+
         $token = $api->getAccessToken();
         if (!$token) {
             Helper::debug('Fehler bei der Authentifizierung.');
@@ -119,6 +126,8 @@ class REST
                 ['status' => 404]
             );
         }
+
+        set_transient($cache_key, $post, HOUR_IN_SECONDS);
 
         return $post;
     }
