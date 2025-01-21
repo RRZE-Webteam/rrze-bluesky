@@ -23,10 +23,18 @@ class API
             $this->baseUrl = $this->config->get('service_baseurl');
         }
 
+        // Load Refresh Token from transient if set
         $storedRefreshToken = get_transient('rrze_bluesky_refresh_token');
         if ($storedRefreshToken) {
             $this->refreshToken = $storedRefreshToken;
             Helper::debug('Loaded refresh token from transient.');
+        }
+
+        // Load Access Token from transient if set
+        $storedAccessToken = get_transient('rrze_bluesky_access_token');
+        if ($storedAccessToken) {
+            $this->token = $storedAccessToken;
+            Helper::debug('Loaded access token from transient.');
         }
     }
 
@@ -62,17 +70,13 @@ class API
         if (isset($response['accessJwt']) && isset($response['refreshJwt'])) {
             $this->token = $response['accessJwt'];
             $this->refreshToken = $response['refreshJwt'];
-            // Store refresh token in transient
-            // * If the server provides an expiration time for refresh tokens, use it!
-            // * Otherwise, store it for a default (e.g. 1 day).
-            $expirationInSeconds = 1200;
-            set_transient(
-                'rrze_bluesky_refresh_token',
-                $this->refreshToken,
-                $expirationInSeconds
-            );
 
-            Helper::debug ("Access token retrieved successfully.");
+            $accessTokenTTL  = 3600;  // 1 hour
+            $refreshTokenTTL = 86400; // 1 day
+            set_transient('rrze_bluesky_access_token',  $this->token,        $accessTokenTTL);
+            set_transient('rrze_bluesky_refresh_token', $this->refreshToken, $refreshTokenTTL);
+
+            Helper::debug("Access token retrieved successfully.");
             return $this->token;
         }
 
@@ -351,7 +355,7 @@ class API
     }
 
 
-   /**
+    /**
      * Führt eine HTTP-Anfrage aus.
      *
      * @param string $url Die URL für die Anfrage.
@@ -390,7 +394,7 @@ class API
 
         $body = wp_remote_retrieve_body($response);
         $decoded = json_decode($body, true);
-        
+
         if (json_last_error() !== JSON_ERROR_NONE) {
             Helper::debug('json_error', 'Failed to decode JSON: ' . json_last_error_msg());
         }

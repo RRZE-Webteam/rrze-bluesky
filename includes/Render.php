@@ -14,7 +14,8 @@ class Render
         add_action('wp_enqueue_scripts', [__CLASS__, 'enqueueStyle']);
     }
 
-    public static function enqueueStyle(){
+    public static function enqueueStyle()
+    {
         wp_enqueue_style('rrze-bluesky');
     }
 
@@ -168,16 +169,16 @@ class Render
             $html .= '<figure class="bsky-external-embed">';
 
             if ($extThumb) {
-                $html .= '<a href="' . esc_url($extUri) . '" target="_blank" rel="noopener noreferrer">';
+                // $html .= '<a href="' . esc_url($extUri) . '" target="_blank" rel="noopener noreferrer">';
                 $html .= '<img src="' . esc_url($extThumb) . '" alt="' . esc_attr($extTitle) . '">';
-                $html .= '</a>';
+                // $html .= '</a>';
             }
 
             // figcaption with link to external article
-            $html .= '<figcaption class="bsky-embed-caption">';
+            $html .= '<figcaption onclick="location.href=\'' . esc_url($extUri) . '\';" class="bsky-embed-caption" aria-label="' . esc_attr($extTitle) . '">';
             if (!empty($extUri)) {
-                $html .= '<h4 class="bsky-external-heading"><a href="' . esc_url($extUri) . '" target="_blank" rel="noopener noreferrer">' 
-                       . esc_html($extTitle) . '</a></h4>';
+                $html .= '<h4 class="bsky-external-heading"><a href="' . esc_url($extUri) . '" target="_blank" rel="noopener noreferrer">'
+                    . esc_html($extTitle) . '</a></h4>';
             } else {
                 $html .= '<h4 class="bsky-external-heading">' . esc_html($extTitle) . '</h4>';
             }
@@ -321,17 +322,16 @@ class Render
         $aspectRatio = '9/16';
 
         ob_start();
-        ?>
+?>
         <div class="vidstack-player" style="--aspect-ratio: <?php echo esc_attr($aspectRatio); ?>;">
             <video
                 src="<?php echo esc_url($videoUrl); ?>"
                 poster="<?php echo esc_url($poster); ?>"
-                controls
-            >
+                controls>
                 <?php echo esc_html($title); ?>
             </video>
         </div>
-        <?php
+<?php
         return ob_get_clean();
     }
 
