@@ -3,6 +3,7 @@
 namespace RRZE\Bluesky;
 
 use RRZE\Bluesky\Helper;
+use The_SEO_Framework\Meta\Robots\Args;
 
 class Render
 {
@@ -32,13 +33,14 @@ class Render
         'limit'          => 10,
     ])
     {
+        Helper::debug("arguments");
+        Helper::debug($args);
         Helper::debug("run");
         // Create an instance so we can call non-static methods.
         $renderer = new self();
 
         $isPublicTimeline = !empty($args['publicTimeline']);
-        $uri             = isset($args['uri']) ? trim($args['uri']) : '';
-        $uri =  '';
+        $uri             = isset($args['postUrl']) ? trim($args['postUrl']) : '';
         $limit           = isset($args['limit']) ? (int) $args['limit'] : 10;
 
         // If publicTimeline is set, show timeline

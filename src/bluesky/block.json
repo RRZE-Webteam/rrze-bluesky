@@ -13,6 +13,14 @@
     "title": {
       "type": "string",
       "default": "Blueprint"
+    },
+    "postUrl": {
+      "type": "string",
+      "default": ""
+    },
+    "caching": {
+      "type": "number",
+      "default": 3600
     }
   },
   "textdomain": "rrze-elements-bluesky",

@@ -2,8 +2,9 @@
 
     .bsky-embed-caption{
         border: 1px solid #bdbdbd;
-        border-radius: 8px;
+        border-radius: 0 0 8px 8px;
         padding: 1rem;
+        margin-top: -0.6rem;
 
         &:hover{
             border-color: #000;

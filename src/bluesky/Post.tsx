@@ -3,6 +3,7 @@ import { useEffect, useState } from "@wordpress/element";
 import apiFetch from "@wordpress/api-fetch";
 import { __ } from "@wordpress/i18n";
 import { RRZEVidstackPlayer as Vidstack } from "./Vidstack";
+import { Notice } from "@wordpress/components";
 
 // You can reuse these interfaces or import them if you have them in a shared file
 export interface BskyPost {
@@ -138,7 +139,7 @@ export default function Post({ uri }: PostProps) {
   }
 
   if (error) {
-    return <p>Error: {error.message}</p>;
+    return  <Notice status="error" isDismissible={false}>Error: {error.message}</Notice>;
   }
 
   if (!postData) {
@@ -309,8 +310,9 @@ export default function Post({ uri }: PostProps) {
               href={getPostUrl(author.handle, postData.uri)}
               className="bsky-reply-count"
             >
-              {__("Read", "rrze-bluesky")} {replyCount}{" "}
-              {__("replies on Bluesky", "rrze-bluesky")}
+              {replyCount > 0
+              ? `${__("Read", "rrze-bluesky")} ${replyCount} ${__("replies on Bluesky", "rrze-bluesky")}`
+              : __("Read on Bluesky", "rrze-bluesky")}
             </a>
           </div>
         </div>
