@@ -154,4 +154,17 @@
         grid-template-columns: 1fr 1fr;
         grid-gap: 0.5rem;
     }
+
+    .bsky-starterpack-list{
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        margin-bottom: 1rem;
+    }
+
+    .bsky-starterpack-list-item{
+        border: 1px solid #e2e2e2;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
 }

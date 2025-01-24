@@ -25,6 +25,7 @@ class API
 
         // Load Refresh Token from transient if set
         $storedRefreshToken = get_transient('rrze_bluesky_refresh_token');
+        Helper::debug('Stored refresh token: ' . $storedRefreshToken);
         if ($storedRefreshToken) {
             $this->refreshToken = $storedRefreshToken;
             Helper::debug('Loaded refresh token from transient.');
@@ -32,6 +33,7 @@ class API
 
         // Load Access Token from transient if set
         $storedAccessToken = get_transient('rrze_bluesky_access_token');
+        Helper::debug('Stored access token: ' . $storedAccessToken);
         if ($storedAccessToken) {
             $this->token = $storedAccessToken;
             Helper::debug('Loaded access token from transient.');
@@ -297,12 +299,20 @@ class API
         $response = $this->makeRequest($url, "GET", $search);
 
         if (!$response) {
-            error_log("Keine Antwort vom Server.");
+            Helper::debug("Keine Antwort vom Server.");
             return null;
         }
 
         // Wandelt das Array in ein Profil-Objekt um
-        return new Profil($response, $this->config);
+
+        //if it is array
+        if (is_array($response)) {
+            return new Profil($response, $this->config);
+        }
+        
+        //else Error log it
+        Helper::debug("Invalid response from server.");
+
     }
 
     /*
@@ -353,6 +363,45 @@ class API
         ];
         return $response;
     }
+
+    /**
+ * Get a view of a starter pack.
+ *
+ * @param string $starterPackUri The at-uri for the starter pack.
+ * @return array|null The starter pack data, or null if not found.
+ * @throws \Exception
+ */
+public function getStarterPack(string $starterPackUri): ?array
+{
+    if (!$this->token) {
+        Helper::debug("Access token is required. Call getAccessToken() first.");
+    }
+
+    if (empty($starterPackUri)) {
+        Helper::debug("starterPack parameter is required.");
+    }
+
+    $url = "{$this->baseUrl}/app.bsky.graph.getStarterPack";
+
+    $data = [
+        'starterPack' => $starterPackUri,
+    ];
+
+    $response = $this->makeRequest($url, "GET", $data);
+
+    if (!$response) {
+        return null;
+    }
+
+    if (!isset($response['starterPack'])) {
+        return null;
+    }
+
+    Helper::debug("starterpack response:");
+    Helper::debug($response);
+    return $response;
+}
+
 
 
     /**

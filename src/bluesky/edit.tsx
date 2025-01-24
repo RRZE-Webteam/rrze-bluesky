@@ -18,6 +18,8 @@ import {
 import "./player.scss";
 
 import { sanitizeUrl } from "./utils";
+import StarterPack from "./StarterPack";
+import StarterPackList from "./StarterPackList";
 
 export interface BskyFeed {
   feed: Array<{
@@ -184,6 +186,8 @@ export default function Edit({ attributes, setAttributes }: BskyBlock) {
         </ToolbarGroup>
       </BlockControls>
       <Post uri={postUrl} />
+      <StarterPack uri={"https://bsky.app/starter-pack/fau.de/3lbr3pd4ooq2q"} />
+      <StarterPackList listUri={"https://bsky.app/starter-pack/fau.de/3lbr3pd4ooq2q"} />
     </div>
   );
 }
