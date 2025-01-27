@@ -23,6 +23,7 @@ export default function StarterPackList({ listUri }: ListProps) {
   const [data, setData] = useState<IListResponse | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isNoticeVisible, setIsNoticeVisible] = useState<boolean>(true);
 
   useEffect(() => {
     setIsLoading(true);
@@ -78,6 +79,18 @@ export default function StarterPackList({ listUri }: ListProps) {
       <h2>{list.name}</h2>
       {list.description && <p>{list.description}</p>}
 
+      {isNoticeVisible && (
+        <Notice
+          status="info"
+          isDismissible={true}
+          onDismiss={() => setIsNoticeVisible(false)}
+        >
+          {__(
+            "This is a preview of the first 50 entries. The frontend will show the complete StarterPack with up to 150 entries.",
+            "rrze-bluesky",
+          )}
+        </Notice>
+      )}
       <ul className="bsky-starterpack-list">
         {/* Reverse items by calling .slice() then .reverse() */}
         {items
