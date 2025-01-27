@@ -227,17 +227,7 @@ class API
         }
         $url = "{$this->baseUrl}/app.bsky.graph.getList";
 
-        // Werte aus der Config laden
-        // $configParams = $this->config->get('query_getlist') ?? [];
-
-        // Fehlende Werte aus der Config ergänzen
-        // foreach ($configParams as $key => $value) {
-        //     if (!array_key_exists($key, $search) || $search[$key] === null || $search[$key] === '') {
-        //         $search[$key] = $value;
-        //     }
-        // }
-        // API-Anfrage
-        $response = $this->makeRequest($url, "GET", $search);
+         $response = $this->makeRequest($url, "GET", $search);
 
         // Falls keine gültige Antwort vorliegt, Abbruch mit null
         if (!$response) {
@@ -284,7 +274,7 @@ class API
     /**
      * Get an account
      * @param actor
-     * @return array|null List or null on not found
+     * @return Profil|null Return a Profil object or null if not found
      */
     public function getProfile(array $search): ?Profil
     {
@@ -292,65 +282,56 @@ class API
             Helper::debug("Access token is required. Call getAccessToken() first.");
         }
         if (empty($search['actor'])) {
-            Helper::debug('Required field actor (Handle or DID of account to fetch profile of.) missing.');
+            Helper::debug('Required field actor missing.');
         }
+    
         $url = "{$this->baseUrl}/app.bsky.actor.getProfile";
-
         $response = $this->makeRequest($url, "GET", $search);
-
+    
         if (!$response) {
             Helper::debug("Keine Antwort vom Server.");
             return null;
         }
-
-        // Wandelt das Array in ein Profil-Objekt um
-
-        //if it is array
+    
         if (is_array($response)) {
             return new Profil($response, $this->config);
         }
-        
-        //else Error log it
+    
         Helper::debug("Invalid response from server.");
-
+        return null; // <--- Ensure we return something (null) here as well
     }
+    
 
     /*
      * Suchanfrage
      */
     public function searchPosts(array $search): ?array
     {
-        // Basis-URL des Endpoints
         $endpoint = "{$this->baseUrl}/app.bsky.feed.searchPosts";
 
-        // Sicherstellen, dass das Feld 'q' vorhanden ist
         if (empty($search['q'])) {
             throw new \InvalidArgumentException('Required field q for the search string is missing.');
         }
 
-        // Werte aus der Config laden
         $configParams = $this->config->get('query_searchPosts') ?? [];
 
-        // Fehlende Werte aus der Config ergänzen
         foreach ($configParams as $key => $value) {
             if (!array_key_exists($key, $search) || $search[$key] === null || $search[$key] === '') {
                 $search[$key] = $value;
             }
         }
 
-        // GET-Anfrage mit den Suchparametern
         $response = $this->makeRequest($endpoint, 'GET', $search);
 
         if (!$response) {
             error_log('No results found.');
             return null;
         }
-        // Validieren der API-Antwort
+
         if (!isset($response['posts'])) {
             throw new \RuntimeException('Invalid api response');
         }
 
-        // Umwandeln der Post-Daten in Post-Objekte
         $posts = [];
         foreach ($response['posts'] as $postData) {
             $posts[] = new Post($postData);
@@ -365,52 +346,175 @@ class API
     }
 
     /**
- * Get a view of a starter pack.
- *
- * @param string $starterPackUri The at-uri for the starter pack.
- * @return array|null The starter pack data, or null if not found.
- * @throws \Exception
- */
-public function getStarterPack(string $starterPackUri): ?array
-{
-    if (!$this->token) {
-        Helper::debug("Access token is required. Call getAccessToken() first.");
+     * Get a view of a starter pack.
+     *
+     * @param string $starterPackUri The at-uri for the starter pack.
+     * @return array|null The starter pack data, or null if not found.
+     * @throws \Exception
+     */
+    public function getStarterPack(string $starterPackUri): ?array
+    {
+        if (!$this->token) {
+            Helper::debug("Access token is required. Call getAccessToken() first.");
+        }
+
+        if (empty($starterPackUri)) {
+            Helper::debug("starterPack parameter is required.");
+        }
+
+        $url = "{$this->baseUrl}/app.bsky.graph.getStarterPack";
+
+        $data = [
+            'starterPack' => $starterPackUri,
+        ];
+
+        $response = $this->makeRequest($url, "GET", $data);
+
+        if (!$response) {
+            return null;
+        }
+
+        if (!isset($response['starterPack'])) {
+            return null;
+        }
+
+        Helper::debug("starterpack response:");
+        Helper::debug($response);
+        return $response;
     }
 
-    if (empty($starterPackUri)) {
-        Helper::debug("starterPack parameter is required.");
+/**
+     * Retrieve ALL items of a starter pack in one pass, caching in transient.
+     *
+     * @param string $starterPackUri at://... or https://bsky.app/starter-pack/... link
+     * @return array|null Returns [
+     *   'list' => [ ... ],
+     *   'items' => [ ... ]
+     * ] or null on error.
+     */
+    public function getAllStarterPackData(string $starterPackUri): ?array
+    {
+        // Use a transient to cache for an hour
+        $cacheKey = 'rrze_bluesky_starterpack_all_' . md5($starterPackUri);
+        $cached   = get_transient($cacheKey);
+        if ($cached !== false) {
+            return $cached;
+        }
+
+        // 1) Ensure we have an access token
+        if (!$this->getAccessToken()) {
+            Helper::debug("No valid Bluesky token to fetch starter pack data.");
+            return null;
+        }
+
+        // 2) Convert bsky.app link -> at:// if needed
+        if (!str_starts_with($starterPackUri, 'at://')) {
+            $converted = $this->convertBskyStarterPackLinkToAtUri($starterPackUri);
+            if (!$converted) {
+                Helper::debug("Invalid or unresolvable starterPack URI/link: " . $starterPackUri);
+                return null;
+            }
+            $starterPackUri = $converted;
+        }
+
+        // 3) Retrieve the Starter Pack info
+        $spResponse = $this->getStarterPack($starterPackUri); 
+        if (!$spResponse || empty($spResponse['starterPack']['list']['uri'])) {
+            Helper::debug("No 'list.uri' found in starter pack response.");
+            return null;
+        }
+
+        // That 'list' array has a 'uri' of the actual list: at://did:xx/app.bsky.graph.list/xxxx
+        $listUri   = $spResponse['starterPack']['list']['uri'];
+        $listName  = $spResponse['starterPack']['list']['name'] ?? 'Bluesky Starter Pack';
+        $listDesc  = $spResponse['starterPack']['list']['purpose'] ?? '';
+
+        // 4) Now gather *all* items from that list by looping over the cursor
+        $allItems = [];
+        $cursor   = '';
+        $limit    = 100;  // Bsky typically allows up to 100
+
+        do {
+            $res = $this->getList([
+                'list'   => $listUri,
+                'limit'  => $limit,
+                'cursor' => $cursor
+            ]);
+            if (!$res) {
+                break;
+            }
+            // Merge items
+            if (!empty($res['items'])) {
+                $allItems = array_merge($allItems, $res['items']);
+            }
+
+            $cursor = $res['cursor'] ?? '';
+        } while (!empty($cursor) && count($allItems) < 300);
+
+        // 5) Build final array
+        $output = [
+            'list' => [
+                'uri'         => $listUri,
+                'name'        => $listName,
+                'description' => $listDesc
+            ],
+            'items' => $allItems
+        ];
+
+        // Cache it for 1 hour
+        set_transient($cacheKey, $output, HOUR_IN_SECONDS);
+
+        return $output;
     }
-
-    $url = "{$this->baseUrl}/app.bsky.graph.getStarterPack";
-
-    $data = [
-        'starterPack' => $starterPackUri,
-    ];
-
-    $response = $this->makeRequest($url, "GET", $data);
-
-    if (!$response) {
-        return null;
-    }
-
-    if (!isset($response['starterPack'])) {
-        return null;
-    }
-
-    Helper::debug("starterpack response:");
-    Helper::debug($response);
-    return $response;
-}
-
-
 
     /**
-     * Führt eine HTTP-Anfrage aus.
+     * Converts a "https://bsky.app/starter-pack/<handle-or-domain>/<recordId>" link
+     * into a valid "at://did:plc:xxxx/app.bsky.starterpack/<recordId>" URI by
+     * resolving the <handle-or-domain> into a DID via getProfile().
      *
-     * @param string $url Die URL für die Anfrage.
-     * @param string $method Die HTTP-Methode ("GET" oder "POST").
-     * @param array|null $data Optional: Daten für POST-Anfragen oder Query-Parameter für GET.
-     * @return array|WP_Error Die JSON-Antwort als Array oder ein WP_Error bei Fehlern.
+     * If already at://, returns unchanged. Returns null on parse or resolution failure.
+     *
+     * @param string $url The bsky starter-pack link
+     * @return string|null The converted at:// link or null
+     */
+    private function convertBskyStarterPackLinkToAtUri(string $url): ?string
+    {
+        // Quick check
+        if (str_starts_with($url, 'at://')) {
+            return $url;
+        }
+
+        $host = parse_url($url, PHP_URL_HOST);
+        $path = parse_url($url, PHP_URL_PATH);
+        if (!$host || !$path || !str_contains($host, 'bsky.app')) {
+            return null; // not recognized
+        }
+
+        $segments = explode('/', trim($path, '/'));
+        // e.g. "starter-pack", "example.bsky.social", "someRecordId"
+        if (count($segments) < 3 || $segments[0] !== 'starter-pack') {
+            return null;
+        }
+
+        [$packSlug, $handleOrDomain, $recordId] = $segments;
+
+        // Resolve handle -> DID
+        $profile = $this->getProfile(['actor' => $handleOrDomain]);
+        if (!$profile || empty($profile->did)) {
+            return null;
+        }
+
+        // Build "at://did:xxx/app.bsky.starterpack/<recordId>"
+        return sprintf('at://%s/app.bsky.starterpack/%s', $profile->did, $recordId);
+    }
+
+    /**
+     * Performs a HTTP request to Bluesky.
+     *
+     * @param  string      $url
+     * @param  string      $method  "GET" or "POST"
+     * @param  array|null  $data    Optional query params or POST body
+     * @return array|WP_Error       Returns decoded JSON as an array, or WP_Error on failure
      */
     private function makeRequest(string $url, string $method, ?array $data = null)
     {

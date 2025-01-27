@@ -3,16 +3,38 @@
 namespace RRZE\Bluesky;
 
 use RRZE\Bluesky\Helper;
+use RRZE\Bluesky\Api;
 use The_SEO_Framework\Meta\Robots\Args;
 
 class Render
 {
+    private $api;
+
     public function __construct()
     {
-        // You can perform any initialization here if needed
-
-        // Enqueue the block's stylesheet
         add_action('wp_enqueue_scripts', [__CLASS__, 'enqueueStyle']);
+
+        $data_encryption = new Encryption();
+        $username = $data_encryption->decrypt(get_option('rrze_bluesky_username'));
+        $password = $data_encryption->decrypt(get_option('rrze_bluesky_password'));
+        $api = new API($username, $password);
+        $this->setApi($api);
+    }
+
+    /** 
+     * Setter for API 
+     */
+    public function setApi($api)
+    {
+        $this->api = $api;
+    }
+
+    /**
+     * Getter for API
+     */
+    public function getApi()
+    {
+        return $this->api;
     }
 
     public static function enqueueStyle()
@@ -39,14 +61,22 @@ class Render
         // Create an instance so we can call non-static methods.
         $renderer = new self();
 
-        $isPublicTimeline = !empty($args['publicTimeline']);
         $uri             = isset($args['postUrl']) ? trim($args['postUrl']) : '';
         $limit           = isset($args['limit']) ? (int) $args['limit'] : 10;
+        $isPost          = isset($args['isPost']) ? (bool) $args['isPost'] : false;
+        $isStarterPack   = isset($args['isStarterPack']) ? (bool) $args['isStarterPack'] : false;
+        $isPublicTimeline = !empty($args['publicTimeline']);
 
         // If publicTimeline is set, show timeline
         if ($isPublicTimeline) {
             $feedData = $renderer->retrievePublicTimelineInformation($limit);
             return $renderer->renderPublicTimeline($feedData);
+        }
+
+        if ($isStarterPack) {
+            $api = $renderer->getApi();
+            $listData = $api->getAllStarterPackData($uri);
+            return $renderer->renderStarterpackList($listData);
         }
 
         // Otherwise, if we have a valid post URI, show the single post
@@ -343,7 +373,7 @@ class Render
      * @param string $poster   Poster/thumbnail image
      * @return string HTML for the video element/player
      */
-    public function renderVidstackVideo($videoUrl, $poster = '', $videoId = '', $aspectRatioClass='ar-9-16')
+    public function renderVidstackVideo($videoUrl, $poster = '', $videoId = '', $aspectRatioClass = 'ar-9-16')
     {
         $aspectRatio = '9/16';
 
@@ -361,7 +391,7 @@ class Render
                 <media-video-layout></media-video-layout>
             </media-player>
         </div>
-<?php
+    <?php
         return ob_get_clean();
     }
 
@@ -427,7 +457,7 @@ class Render
             . '</div>';
     }
 
-     /**
+    /**
      * Retrieves the appropriate aspect ratio class for FAU video embeds.
      * 
      * This function determines the correct CSS class to apply based on 
@@ -465,4 +495,97 @@ class Render
         }
     }
 
+    /**
+     * Render Starterpack List
+     *
+     * @param [type] $listData
+     * @return void
+     */
+    public function renderStarterpackList($listData)
+    {
+        Helper::debug("List data:");
+        Helper::debug($listData);
+        if (!$listData || !isset($listData['list'], $listData['items']) || empty($listData['items'])) {
+            return '<p>No list data found.</p>';
+        }
+
+        $list  = $listData['list'];
+        $items = $listData['items'];
+
+        ob_start(); ?>
+        <div class="wp-block-rrze-bluesky-bluesky">
+            <h2><?php echo esc_html($list['name']); ?></h2>
+            <?php if (!empty($list['description'])) : ?>
+                <p><?php echo esc_html($list['description']); ?></p>
+            <?php endif; ?>
+
+            <ul class="bsky-starterpack-list">
+                <?php
+                // Reverse items if you wish
+                foreach (array_reverse($items) as $item) :
+                    $subj = $item['subject'] ?? null;
+                    $displayName = $subj->displayName ?? '';
+                    $handle      = $subj->handle ?? '';
+                    $did         = $subj->did ?? '';
+                    $avatar      = $subj->avatar ?? '';
+                    $desc        = $subj->description ?? '';
+                ?>
+                    <li class="bsky-starterpack-list-item">
+                        <div class="bsky-profile">
+                            <?php if ($avatar): ?>
+                                <img class="bsky-avatar"
+                                    src="<?php echo esc_url($avatar); ?>"
+                                    alt="<?php echo esc_attr($displayName); ?>" />
+                            <?php endif; ?>
+
+                            <div class="bsky-social-link">
+                                <strong><?php echo esc_html($displayName); ?></strong><br />
+                                <em>@<?php echo esc_html($handle); ?></em>
+                            </div>
+
+                            <a href="https://bsky.app/profile/<?php echo esc_attr($did); ?>"
+                                class="bsky-follow-button"
+                                aria-label="<?php printf('Follow %s', esc_attr($displayName)); ?>">
+                                <svg class="bsky-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.-->
+                                    <path fill="currentColor" d="M111.8 62.2C170.2 105.9 233 194.7 256 242.4c23-47.6 85.8-136.4 144.2-180.2c42.1-31.6 110.3-56 110.3 21.8c0 15.5-8.9 130.5-14.1 149.2C478.2 298 412 314.6 353.1 304.5c102.9 17.5 129.1 75.5 72.5 133.5c-107.4 110.2-154.3-27.6-166.3-62.9l0 0c-1.7-4.9-2.6-7.8-3.3-7.8s-1.6 3-3.3 7.8l0 0c-12 35.3-59 173.1-166.3 62.9c-56.5-58-30.4-116 72.5-133.5C100 314.6 33.8 298 15.7 233.1C10.4 214.4 1.5 99.4 1.5 83.9c0-77.8 68.2-53.4 110.3-21.8z" />
+                                </svg>
+                                <?php esc_html_e('Follow', 'rrze-bluesky'); ?>
+                            </a>
+                        </div>
+
+                        <?php if ($desc): ?>
+                            <p><?php echo esc_html($desc); ?></p>
+                        <?php endif; ?>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+<?php
+        return ob_get_clean();
+    }
+
+    public function retrieveStarterpackInformation($uri)
+    {
+        if (empty($uri)) {
+            return null;
+        }
+
+        $endpoint = home_url('wp-json/rrze-bluesky/v1/list');
+        $response = wp_remote_get(add_query_arg(['starterPack' => urlencode($uri)], $endpoint));
+
+        Helper::debug("Listencheck");
+        Helper::debug($response);
+        if (is_wp_error($response)) {
+            return null;
+        }
+
+        $body = wp_remote_retrieve_body($response);
+        $decoded = json_decode($body, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return null;
+        }
+
+        return $decoded;
+    }
 }

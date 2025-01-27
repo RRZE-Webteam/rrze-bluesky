@@ -1,132 +1,51 @@
-// Imports from WordPress libraries
 import {
   useBlockProps,
   InspectorControls,
   BlockControls,
 } from "@wordpress/block-editor";
 import { __ } from "@wordpress/i18n";
-// import PublicTimeline from "./PublicTimeline";
-import Post from "./Post";
-//import player scss
 import {
   __experimentalInputControl as InputControl,
   PanelBody,
   ToolbarGroup,
   ToolbarItem,
   ToolbarDropdownMenu,
+  Notice,
 } from "@wordpress/components";
 import "./player.scss";
-
 import { sanitizeUrl } from "./utils";
-import StarterPack from "./StarterPack";
+import Post from "./Post";
 import StarterPackList from "./StarterPackList";
 
-export interface BskyFeed {
-  feed: Array<{
-    post: BskyPost;
-  }>;
-}
+// Helper function to determine URL type
+const getUrlType = (url: string): "post" | "starterPack" | "unknown" => {
+  if (/https:\/\/bsky\.app\/profile\/.+\/post\/.+/.test(url)) {
+    return "post";
+  }
+  if (/https:\/\/bsky\.app\/starter-pack\/.+\/.+/.test(url)) {
+    return "starterPack";
+  }
+  return "unknown";
+};
 
 interface BskyBlock {
   attributes: {
     postUrl: string;
     caching: number;
+    isPost: boolean;
+    isStarterPack: boolean;
   };
-  setAttributes: (attributes: { postUrl?: string; caching?: number }) => void;
+  setAttributes: (attributes: { postUrl?: string; caching?: number; isPost?: boolean; isStarterPack?: boolean }) => void;
 }
 
-export interface BskyPost {
-  uri: string;
-  cid: string;
-
-  author: {
-    did: string;
-    handle: string;
-    displayName: string;
-    avatar: string;
-    viewer: {
-      muted: boolean;
-      blockedBy: boolean;
-    };
-    labels: string[];
-    createdAt?: string;
-  };
-
-  record: {
-    $type?: string;
-    createdAt: string;
-    embed?: {
-      $type: string;
-      external: {
-        description: string;
-        thumb: {
-          $type?: string;
-          ref: {
-            $link: string;
-          };
-          mimeType: string;
-          size: number;
-        };
-        title: string;
-        uri: string;
-      };
-    };
-    facets?: Array<{
-      features: Array<{
-        $type: string;
-        uri: string;
-      }>;
-      index: {
-        byteStart: number;
-        byteEnd: number;
-      };
-    }>;
-    langs?: string[];
-    text: string;
-  };
-
-  embed?: {
-    $type: string;
-    external: {
-      uri: string;
-      title: string;
-      description: string;
-      thumb: string;
-    };
-  };
-
-  replyCount: number;
-  repostCount: number;
-  likeCount: number;
-  quoteCount: number;
-  indexedAt: string;
-
-  viewer: {
-    threadMuted: boolean;
-    replyDisabled: boolean;
-    embeddingDisabled: boolean;
-  };
-
-  labels: string[];
-  threadgate?: {
-    uri: string;
-    cid: string;
-    record: {
-      $type: string;
-      allow: string[];
-      createdAt: string;
-      hiddenReplies: string[];
-      post: string;
-    };
-    lists: string[];
-  };
-}
 export default function Edit({ attributes, setAttributes }: BskyBlock) {
   const { postUrl, caching } = attributes;
   const blockProps = useBlockProps();
+  let urlType = getUrlType(postUrl);
 
   const onChangeUrl = (url: string) => {
-    setAttributes({ postUrl: sanitizeUrl(url) });
+    urlType = getUrlType(url);
+    setAttributes({ postUrl: sanitizeUrl(url), isPost: urlType === "post", isStarterPack: urlType === "starterPack" });
   };
 
   const onChangeCaching = (caching: number) => {
@@ -166,7 +85,7 @@ export default function Edit({ attributes, setAttributes }: BskyBlock) {
       <InspectorControls>
         <PanelBody title={__("Post Settings", "bluesky")}>
           <InputControl
-            label={__("Post URL", "bluesky")}
+            label={__("Post or StarterPack URL", "bluesky")}
             value={postUrl}
             onChange={onChangeUrl}
           />
@@ -185,9 +104,13 @@ export default function Edit({ attributes, setAttributes }: BskyBlock) {
           </ToolbarItem>
         </ToolbarGroup>
       </BlockControls>
-      <Post uri={postUrl} />
-      <StarterPack uri={"https://bsky.app/starter-pack/fau.de/3lbr3pd4ooq2q"} />
-      <StarterPackList listUri={"https://bsky.app/starter-pack/fau.de/3lbr3pd4ooq2q"} />
+      {urlType === "post" && <Post uri={postUrl} />}
+      {urlType === "starterPack" && <StarterPackList listUri={postUrl} />}
+      {urlType === "unknown" && (
+        <Notice status="error" isDismissible={false}>
+          {__("Invalid URL. Please enter a valid Post or StarterPack URL.", "bluesky")}
+        </Notice>
+      )}
     </div>
   );
 }

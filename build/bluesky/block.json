@@ -21,6 +21,14 @@
     "caching": {
       "type": "number",
       "default": 3600
+    },
+    "isPost": {
+      "type": "boolean",
+      "default": false
+    },
+    "isStarterPack": {
+      "type": "boolean",
+      "default": false
     }
   },
   "textdomain": "rrze-elements-bluesky",

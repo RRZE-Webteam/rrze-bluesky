@@ -85,8 +85,36 @@ export default function StarterPackList({ listUri }: ListProps) {
           .reverse()
           .map((item: IListItem) => (
             <li className="bsky-starterpack-list-item" key={item.uri}>
-              <strong>{item.subject.displayName}</strong> (
-              <em>@{item.subject.handle}</em>)
+              <div className="bsky-profile">
+                {item.subject.avatar && (
+                  <img
+                    className="bsky-avatar"
+                    src={item.subject.avatar}
+                    alt={item.subject.displayName}
+                  />
+                )}
+                <div className="bsky-social-link">
+                  <strong>{item.subject.displayName}</strong>
+                  <em>@{item.subject.handle}</em>
+                </div>
+                <a
+                  href={"https://bsky.app/profile/" + item.subject.did}
+                  aria-label={"Follow " + item.subject.displayName}
+                  className="bsky-follow-button"
+                >
+                  <svg
+                    className="bsky-svg"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 448 512"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 144L48 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l144 0 0 144c0 17.7 14.3 32 32 32s32-14.3 32-32l0-144 144 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-144 0 0-144z"
+                    />
+                  </svg>
+                  {__("Follow", "rrze-bluesky")}
+                </a>
+              </div>
               {item.subject.description && <p>{item.subject.description}</p>}
             </li>
           ))}
