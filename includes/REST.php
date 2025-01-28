@@ -474,7 +474,6 @@ public function getListHandler(WP_REST_Request $request)
 
         $handle   = $segments[1]; // e.g. "fau.de"
         $recordId = $segments[2]; // e.g. "3lbr3pd4ooq2q"
-        Helper::debug($recordId);
 
         $api = $this->getApi();
         $api->getAccessToken();
@@ -486,7 +485,6 @@ public function getListHandler(WP_REST_Request $request)
 
         // Build a valid AT URI:
         // "at://did:plc:xxxx/app.bsky.starterpack/<recordId>"
-        Helper::debug($profile->did);
         return sprintf('at://%s/app.bsky.starterpack/%s', $profile->did, $recordId);
     }
 }

@@ -3,6 +3,7 @@ import { useEffect, useState } from "@wordpress/element";
 import apiFetch from "@wordpress/api-fetch";
 import { __ } from "@wordpress/i18n";
 import { Notice } from "@wordpress/components";
+import HeadingComponent from "./HeadingComponent";
 
 // Import the interfaces from above (or paste them in directly):
 import { IListResponse, IListItem } from "./types"; // Adjust path as needed
@@ -13,13 +14,14 @@ interface ListProps {
   // you could rename this to something else (like `param`)
   // and construct the query string differently.
   listUri: string;
+  hstart: number;
 }
 
 /**
  * A React component that loads & displays a Bluesky List
  * from the "rrze-bluesky/v1/list" endpoint.
  */
-export default function StarterPackList({ listUri }: ListProps) {
+export default function StarterPackList({ listUri, hstart }: ListProps) {
   const [data, setData] = useState<IListResponse | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -76,7 +78,9 @@ export default function StarterPackList({ listUri }: ListProps) {
 
   return (
     <div className="bluesky-list-block">
-      <h2>{list.name}</h2>
+      <HeadingComponent
+        level={hstart}
+      >{list.name}</HeadingComponent>
       {list.description && <p>{list.description}</p>}
 
       {isNoticeVisible && (

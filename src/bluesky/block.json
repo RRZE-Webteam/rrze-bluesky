@@ -29,6 +29,10 @@
     "isStarterPack": {
       "type": "boolean",
       "default": false
+    },
+    "hstart": {
+      "type": "number",
+      "default": 2
     }
   },
   "textdomain": "rrze-elements-bluesky",

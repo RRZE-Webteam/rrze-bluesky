@@ -25,18 +25,14 @@ class API
 
         // Load Refresh Token from transient if set
         $storedRefreshToken = get_transient('rrze_bluesky_refresh_token');
-        Helper::debug('Stored refresh token: ' . $storedRefreshToken);
         if ($storedRefreshToken) {
             $this->refreshToken = $storedRefreshToken;
-            Helper::debug('Loaded refresh token from transient.');
         }
 
         // Load Access Token from transient if set
         $storedAccessToken = get_transient('rrze_bluesky_access_token');
-        Helper::debug('Stored access token: ' . $storedAccessToken);
         if ($storedAccessToken) {
             $this->token = $storedAccessToken;
-            Helper::debug('Loaded access token from transient.');
         }
     }
 
@@ -67,8 +63,6 @@ class API
             return null;
         }
 
-        Helper::debug($response);
-
         if (isset($response['accessJwt']) && isset($response['refreshJwt'])) {
             $this->token = $response['accessJwt'];
             $this->refreshToken = $response['refreshJwt'];
@@ -78,11 +72,9 @@ class API
             set_transient('rrze_bluesky_access_token',  $this->token,        $accessTokenTTL);
             set_transient('rrze_bluesky_refresh_token', $this->refreshToken, $refreshTokenTTL);
 
-            Helper::debug("Access token retrieved successfully.");
             return $this->token;
         }
 
-        Helper::debug("Failed to retrieve access token.");
         return null;
     }
 
@@ -134,8 +126,6 @@ class API
         // API-Aufruf über die makeRequest-Methode
         $response = $this->makeRequest($url, "GET", $data);
 
-        Helper::debug("response");
-        Helper::debug($response);
         if (!$response || empty($response['posts'])) {
             error_log("No post found for: $uri");
             return null;
@@ -164,7 +154,6 @@ class API
         $response = $this->makeRequest($url, "GET");
 
         if (is_wp_error($response)) {
-            Helper::debug("Error fetching public timeline: " . $response->get_error_message());
             return null;
         }
 
@@ -378,8 +367,6 @@ class API
             return null;
         }
 
-        Helper::debug("starterpack response:");
-        Helper::debug($response);
         return $response;
     }
 

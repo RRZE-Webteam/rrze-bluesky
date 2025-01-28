@@ -66,6 +66,7 @@ class Render
         $isPost          = isset($args['isPost']) ? (bool) $args['isPost'] : false;
         $isStarterPack   = isset($args['isStarterPack']) ? (bool) $args['isStarterPack'] : false;
         $isPublicTimeline = !empty($args['publicTimeline']);
+        $hstart          = isset($args['hstart']) ? (int) $args['hstart'] : 2;
 
         // If publicTimeline is set, show timeline
         if ($isPublicTimeline) {
@@ -76,7 +77,7 @@ class Render
         if ($isStarterPack) {
             $api = $renderer->getApi();
             $listData = $api->getAllStarterPackData($uri);
-            return $renderer->renderStarterpackList($listData);
+            return $renderer->renderStarterpackList($listData, $hstart);
         }
 
         // Otherwise, if we have a valid post URI, show the single post
@@ -99,16 +100,12 @@ class Render
         // Placeholder for an actual API call or a call to your WP REST endpoint
         // Example:
         $response = wp_remote_get(home_url('wp-json/rrze-bluesky/v1/post?uri=' . urlencode($uri)));
-        Helper::debug("Post data response:");
-        Helper::debug($response);
+
         if (is_wp_error($response)) {
             return null;
         }
         $body = wp_remote_retrieve_body($response);
         $decoded = json_decode($body, true);
-
-        Helper::debug("Post data hereon:");
-        Helper::debug($decoded);
 
         return $decoded;
     }
@@ -501,10 +498,8 @@ class Render
      * @param [type] $listData
      * @return void
      */
-    public function renderStarterpackList($listData)
+    public function renderStarterpackList($listData, $hstart = 2)
     {
-        Helper::debug("List data:");
-        Helper::debug($listData);
         if (!$listData || !isset($listData['list'], $listData['items']) || empty($listData['items'])) {
             return '<p>No list data found.</p>';
         }
@@ -514,7 +509,9 @@ class Render
 
         ob_start(); ?>
         <div class="wp-block-rrze-bluesky-bluesky">
-            <h2><?php echo esc_html($list['name']); ?></h2>
+            <h<?php echo (int) $hstart; ?>>
+                <?php echo esc_html($list['name']); ?>
+            </h<?php echo (int) $hstart; ?>>
             <?php if (!empty($list['description'])) : ?>
                 <p><?php echo esc_html($list['description']); ?></p>
             <?php endif; ?>
@@ -573,8 +570,6 @@ class Render
         $endpoint = home_url('wp-json/rrze-bluesky/v1/list');
         $response = wp_remote_get(add_query_arg(['starterPack' => urlencode($uri)], $endpoint));
 
-        Helper::debug("Listencheck");
-        Helper::debug($response);
         if (is_wp_error($response)) {
             return null;
         }
