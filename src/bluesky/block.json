@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "rrze-bluesky/bluesky",
+  "version": "1.0.0",
+  "title": "Bluesky",
+  "category": "rrze",
+  "description": "Block for embedding content from Bluesky.",
+  "supports": {
+    "html": false
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "default": "Blueprint"
+    },
+    "postUrl": {
+      "type": "string",
+      "default": ""
+    },
+    "caching": {
+      "type": "number",
+      "default": 3600
+    },
+    "isPost": {
+      "type": "boolean",
+      "default": false
+    },
+    "isStarterPack": {
+      "type": "boolean",
+      "default": false
+    },
+    "hstart": {
+      "type": "number",
+      "default": 2
+    }
+  },
+  "textdomain": "rrze-elements-bluesky",
+  "editorScript": "file:./index.ts",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css"
+}
