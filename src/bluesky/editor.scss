@@ -162,6 +162,47 @@
         margin-bottom: 1rem;
     }
 
+    .bsky-embed-caption{
+        border: 1px solid #bdbdbd;
+        border-radius: 0 0 8px 8px;
+        padding: 1rem;
+        margin-top: -0.6rem;
+
+        &:hover{
+            border-color: #000;
+            background-color: #f8f8f8;
+            border-top: 1px solid #000;
+
+            transition: all 0.5s;
+        }
+    }
+
+    .bsky-external-domain-host{
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 0;
+        margin-top: 0;
+    }
+
+    .bsky-external-heading{
+        font-size: 1rem;
+        text-decoration: none;
+        font-weight: 700;
+        color: #222;
+        margin-top: 0;
+        margin-bottom: 0rem;
+
+        a{
+            color: #222;
+            text-decoration: none;
+        }
+    }
+
+    .bsky-external-teaser{
+        font-size:0.9rem;
+        margin-bottom: 0;
+    }
+
     .bsky-starterpack-list-item{
         border-top: 1px solid #e2e2e2;
         padding: 1rem 0;

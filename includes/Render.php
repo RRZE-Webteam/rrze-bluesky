@@ -55,9 +55,6 @@ class Render
         'limit'          => 10,
     ])
     {
-        Helper::debug("arguments");
-        Helper::debug($args);
-        Helper::debug("run");
         // Create an instance so we can call non-static methods.
         $renderer = new self();
 
@@ -97,8 +94,6 @@ class Render
      */
     public function retrievePostInformation($uri)
     {
-        // Placeholder for an actual API call or a call to your WP REST endpoint
-        // Example:
         $response = wp_remote_get(home_url('wp-json/rrze-bluesky/v1/post?uri=' . urlencode($uri)));
 
         if (is_wp_error($response)) {
@@ -582,5 +577,55 @@ class Render
         }
 
         return $decoded;
+    }
+
+
+    /**
+     * Renders a personal Bluesky profile card given a handle (e.g. "example.bsky.social").
+     *
+     * @param string $bskyHandle The Bluesky handle to fetch (without "@" prefix).
+     * @return string            HTML content to render the profile or error message.
+     */
+    public function renderPersonalProfile($bskyHandle)
+    {
+        $renderer = new self();
+
+        // Ensure we have an initialized API object:
+        $api = $renderer->getApi();
+        if (!$api) {
+            return '<p>No API object available.</p>';
+        }
+
+        // Retrieve the profile via the API:
+        $profileData = $api->getProfile(['actor' => $bskyHandle]);
+        if (!$profileData) {
+            return '<p>No Bluesky profile found for: ' . esc_html($bskyHandle) . '</p>';
+        }
+
+        // Extract relevant fields from $profileData (instance of Profil, see API code).
+        $displayName = !empty($profileData->displayName) ? $profileData->displayName : $bskyHandle;
+        $handle      = !empty($profileData->handle)      ? $profileData->handle      : $bskyHandle;
+        $avatar      = !empty($profileData->avatar)      ? $profileData->avatar      : '';
+        $description = !empty($profileData->description) ? $profileData->description : '';
+
+        // Build the HTML card:
+        $html  = '<div class="wp-block-rrze-bluesky-bluesky">';
+        $html .= '  <div class="bsky-profile-card">';
+        if ($avatar) {
+            $html .= '    <div class="bsky-profile-avatar">';
+            $html .= '      <img style="height:80px; width:80px; border-radius:50%;" src="' . esc_url($avatar) . '" alt="' . esc_attr($displayName) . '" />';
+            $html .= '    </div>';
+        }
+        $html .= '    <div class="bsky-profile-details">';
+        $html .= '      <h3>' . esc_html($displayName) . '</h3>';
+        $html .= '      <p>@' . esc_html($handle) . '</p>';
+        if (!empty($description)) {
+            $html .= '      <p>' . esc_html($description) . '</p>';
+        }
+        $html .= '    </div>'; // .bsky-profile-details
+        $html .= '  </div>';   // .bsky-profile-card
+        $html .= '</div>';
+
+        return $html;
     }
 }

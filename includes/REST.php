@@ -51,16 +51,6 @@ class REST
             'permission_callback' => [$this, 'permissionCheck'],
         ]);
 
-        // register_rest_route('rrze_bluesky/v1', '/list', [
-        //     'methods' => 'GET',
-        //     'callback' => [$this, 'getList'],
-        // ]);
-
-        // register_rest_route('rrze_bluesky/v1', '/user', [
-        //     'methods' => 'GET',
-        //     'callback' => [$this, 'getUserProfile'],
-        // ]);
-
         register_rest_route('rrze-bluesky/v1', '/post', [
             'methods' => 'GET',
             'callback' => [$this, 'getPost'],
@@ -77,7 +67,7 @@ class REST
         register_rest_route('rrze-bluesky/v1', '/starter-pack', [
             'methods'             => 'GET',
             'callback'            => [$this, 'getStarterPackHandler'],
-            'permission_callback' => [$this, 'permissionCheck'], // or a custom callback
+            'permission_callback' => [$this, 'permissionCheck'],
             'args' => [
                 'starterPack' => [
                     'required' => true,
@@ -93,7 +83,7 @@ class REST
             [
                 'methods'             => 'GET',
                 'callback'            => [$this, 'getListHandler'],
-                'permission_callback' => [$this, 'permissionCheck'], // adjust if needed
+                'permission_callback' => [$this, 'permissionCheck'],
                 'args'                => [
                     'list' => [
                         'required'    => false,
@@ -248,16 +238,14 @@ class REST
      */
     public function permissionCheck(WP_REST_Request $request)
     {
-        // Example: Check if user is logged in
-        // if (!is_user_logged_in()) {
-        //     return new WP_Error(
-        //         'rest_forbidden',
-        //         esc_html__('You are not allowed to access this endpoint.', 'text-domain'),
-        //         ['status' => 401]
-        //     );
-        // }
+        if (!is_user_logged_in()) {
+            return new WP_Error(
+                'rest_forbidden',
+                esc_html__('You are not allowed to access this endpoint.', 'text-domain'),
+                ['status' => 401]
+            );
+        }
 
-        // Optionally check for capabilities: current_user_can('manage_options')
         return true;
     }
 
@@ -303,14 +291,6 @@ class REST
 
         // If endpoint requires auth, call getAccessToken():
         $api = $this->getApi();
-        $token = $api->getAccessToken();
-        if (!$token) {
-            return new \WP_Error(
-                'no_token',
-                __('Authentication failed.', 'rrze-bluesky'),
-                ['status' => 401]
-            );
-        }
 
         // Call your $api->getStarterPack() with the newly-converted at:// URI
         try {
@@ -340,111 +320,102 @@ class REST
      * @param WP_REST_Request $request
      * @return array|WP_Error
      */
-/**
- * Handler for GET /rrze-bluesky/v1/list
- *
- * Accepts either:
- *   - ?list=at://did:xxx/app.bsky.graph.list/yyy
- *   - OR ?starterPack=at://did:xxx/app.bsky.starterpack/zzz (or a bsky.app link)
- * 
- * If 'starterPack' is given, we call getStarterPackHandler internally,
- * then use its 'list.uri' as the 'list' param.
- */
-public function getListHandler(WP_REST_Request $request)
-{
-    $listParam       = $request->get_param('list');         // The direct AT-URI of the list
-    $starterPackParam = $request->get_param('starterPack'); // Alternatively, a starter-pack param
-    $limit           = $request->get_param('limit');        // Optional
-    $cursor          = $request->get_param('cursor');       // Optional
+    /**
+     * Handler for GET /rrze-bluesky/v1/list
+     *
+     * Accepts either:
+     *   - ?list=at://did:xxx/app.bsky.graph.list/yyy
+     *   - OR ?starterPack=at://did:xxx/app.bsky.starterpack/zzz (or a bsky.app link)
+     * 
+     * If 'starterPack' is given, we call getStarterPackHandler internally,
+     * then use its 'list.uri' as the 'list' param.
+     */
+    public function getListHandler(WP_REST_Request $request)
+    {
+        $listParam       = $request->get_param('list');         // The direct AT-URI of the list
+        $starterPackParam = $request->get_param('starterPack'); // Alternatively, a starter-pack param
+        $limit           = $request->get_param('limit');        // Optional
+        $cursor          = $request->get_param('cursor');       // Optional
 
-    // 1) If user didn't pass 'list' but provided 'starterPack', 
-    //    we retrieve that starter pack to find the list.uri
-    if (!$listParam && $starterPackParam) {
-        // Construct a mock request to call getStarterPackHandler
-        $mockRequest = new WP_REST_Request('GET', '/rrze-bluesky/v1/starter-pack');
-        $mockRequest->set_param('starterPack', $starterPackParam);
+        // 1) If user didn't pass 'list' but provided 'starterPack', 
+        //    we retrieve that starter pack to find the list.uri
+        if (!$listParam && $starterPackParam) {
+            // Construct a mock request to call getStarterPackHandler
+            $mockRequest = new WP_REST_Request('GET', '/rrze-bluesky/v1/starter-pack');
+            $mockRequest->set_param('starterPack', $starterPackParam);
 
-        // Re-use the logic in getStarterPackHandler
-        $starterPackResponse = $this->getStarterPackHandler($mockRequest);
+            // Re-use the logic in getStarterPackHandler
+            $starterPackResponse = $this->getStarterPackHandler($mockRequest);
 
-        if (is_wp_error($starterPackResponse)) {
-            // If there's an error, return it immediately
-            return $starterPackResponse;
+            if (is_wp_error($starterPackResponse)) {
+                // If there's an error, return it immediately
+                return $starterPackResponse;
+            }
+            // $starterPackResponse is an array containing "starterPack", e.g.:
+            // { "starterPack": { "list": { "uri": "at://did:.../app.bsky.graph.list/..." }, ... } }
+            $listUri = $starterPackResponse['starterPack']['list']['uri'] ?? null;
+            if (!$listUri) {
+                return new WP_Error(
+                    'no_list_uri_found',
+                    __('No "list.uri" found in the retrieved starter pack.', 'rrze-bluesky'),
+                    ['status' => 400]
+                );
+            }
+            // Now we have the actual list AT-URI
+            $listParam = $listUri;
         }
-        // $starterPackResponse is an array containing "starterPack", e.g.:
-        // { "starterPack": { "list": { "uri": "at://did:.../app.bsky.graph.list/..." }, ... } }
-        $listUri = $starterPackResponse['starterPack']['list']['uri'] ?? null;
-        if (!$listUri) {
+
+        // 2) If we still have no "list" param at this point, bail
+        if (!$listParam) {
             return new WP_Error(
-                'no_list_uri_found',
-                __('No "list.uri" found in the retrieved starter pack.', 'rrze-bluesky'),
+                'missing_list',
+                __('No "list" parameter provided. Provide either ?list=... or ?starterPack=....', 'rrze-bluesky'),
                 ['status' => 400]
             );
         }
-        // Now we have the actual list AT-URI
-        $listParam = $listUri;
-    }
 
-    // 2) If we still have no "list" param at this point, bail
-    if (!$listParam) {
-        return new WP_Error(
-            'missing_list',
-            __('No "list" parameter provided. Provide either ?list=... or ?starterPack=....', 'rrze-bluesky'),
-            ['status' => 400]
-        );
-    }
-
-    // Build the arguments for getList()
-    $args = [
-        'list' => $listParam,
-    ];
-    if ($limit) {
-        $args['limit'] = (int) $limit;
-    }
-    if ($cursor) {
-        $args['cursor'] = $cursor;
-    }
-
-    // Build a cache key based on these args
-    $cache_key = 'rrze_bluesky_get_list_' . md5(json_encode($args));
-    $cached_data = get_transient($cache_key);
-    if (false !== $cached_data) {
-        return $cached_data;
-    }
-
-    // Retrieve the access token if needed
-    $api = $this->getApi();
-    $token = $api->getAccessToken();
-    if (!$token) {
-        return new WP_Error(
-            'no_token',
-            __('Authentication failed or no token available.', 'rrze-bluesky'),
-            ['status' => 401]
-        );
-    }
-
-    // Finally, call the API to get the list data
-    try {
-        $data = $api->getList($args);
-        if (!$data) {
-            return new WP_Error(
-                'list_not_found',
-                __('No list data returned for the given AT-URI.', 'rrze-bluesky'),
-                ['status' => 404]
-            );
+        // Build the arguments for getList()
+        $args = [
+            'list' => $listParam,
+        ];
+        if ($limit) {
+            $args['limit'] = (int) $limit;
+        }
+        if ($cursor) {
+            $args['cursor'] = $cursor;
         }
 
-        set_transient($cache_key, $data, HOUR_IN_SECONDS);
-        return $data;
+        // Build a cache key based on these args
+        $cache_key = 'rrze_bluesky_get_list_' . md5(json_encode($args));
+        $cached_data = get_transient($cache_key);
+        if (false !== $cached_data) {
+            return $cached_data;
+        }
 
-    } catch (\Exception $e) {
-        return new WP_Error(
-            'list_error',
-            $e->getMessage(),
-            ['status' => 500]
-        );
+        // Retrieve the access token if needed
+        $api = $this->getApi();
+
+        // call the API to get the list data
+        try {
+            $data = $api->getList($args);
+            if (!$data) {
+                return new WP_Error(
+                    'list_not_found',
+                    __('No list data returned for the given AT-URI.', 'rrze-bluesky'),
+                    ['status' => 404]
+                );
+            }
+
+            set_transient($cache_key, $data, HOUR_IN_SECONDS);
+            return $data;
+        } catch (\Exception $e) {
+            return new WP_Error(
+                'list_error',
+                $e->getMessage(),
+                ['status' => 500]
+            );
+        }
     }
-}
 
     /**
      * Converts a "https://bsky.app/starter-pack/<handle-or-domain>/<recordId>" link
@@ -476,7 +447,6 @@ public function getListHandler(WP_REST_Request $request)
         $recordId = $segments[2]; // e.g. "3lbr3pd4ooq2q"
 
         $api = $this->getApi();
-        $api->getAccessToken();
 
         $profile = $api->getProfile(['actor' => $handle]);
         if (!$profile || empty($profile->did)) {

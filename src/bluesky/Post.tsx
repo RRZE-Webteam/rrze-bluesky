@@ -105,6 +105,16 @@ function getPostUrl(handle: string, postUri: string): string {
   return `https://bsky.app/profile/${handle}/post/${postId}`;
 }
 
+function getDomainFromUrl(url: string): string {
+  try {
+    const { hostname } = new URL(url);
+    return hostname;
+  } catch (e) {
+    console.log("Error parsing URL:", e);
+    return url;
+  }
+}
+
 interface PostProps {
   uri: string;
 }
@@ -139,21 +149,19 @@ export default function Post({ uri }: PostProps) {
   }
 
   if (error) {
-    return  <Notice status="error" isDismissible={false}>Error: {error.message}</Notice>;
+    return (
+      <Notice status="error" isDismissible={false}>
+        Error: {error.message}
+      </Notice>
+    );
   }
 
   if (!postData) {
     return <p>No post data found.</p>;
   }
 
-  const {
-    author,
-    record,
-    embed,
-    likeCount,
-    replyCount,
-    repostCount,
-  } = postData;
+  const { author, record, embed, likeCount, replyCount, repostCount } =
+    postData;
 
   const isVideoEmbed = embed?.$type === "app.bsky.embed.video#view";
 
@@ -216,12 +224,59 @@ export default function Post({ uri }: PostProps) {
           </div>
         )}
 
-        {embed?.external && !embed.images && (
-          <figure>
-            <img
-              src={embed.external.thumb || embed.external.uri}
-              alt={embed.external.description || "Bluesky embedded image"}
-            />
+        {embed?.external && (
+          <figure className="bsky-external-embed">
+            {embed.external.thumb && (
+              <img
+                src={embed.external.thumb}
+                alt={embed.external.title || "Bluesky embedded image"}
+              />
+            )}
+
+            <figcaption
+              className="bsky-embed-caption"
+              aria-label={embed.external.title || ""}
+              onClick={() => {
+                if (embed.external.uri) {
+                  window.open(
+                    embed.external.uri,
+                    "_blank",
+                    "noopener,noreferrer",
+                  );
+                }
+              }}
+              style={{ cursor: embed.external.uri ? "pointer" : "default" }}
+            >
+              {embed.external.uri ? (
+                <h4 className="bsky-external-heading">
+                  <a
+                    href={embed.external.uri}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {embed.external.title || __("Untitled", "rrze-bluesky")}
+                  </a>
+                </h4>
+              ) : (
+                <h4 className="bsky-external-heading">
+                  {embed.external.title || __("Untitled", "rrze-bluesky")}
+                </h4>
+              )}
+              {embed.external.description && (
+                <p className="bsky-external-teaser">
+                  {embed.external.description}
+                </p>
+              )}
+
+              {embed.external.uri && (
+                <>
+                  <hr />
+                  <p className="bsky-external-domain-host">
+                    {getDomainFromUrl(embed.external.uri)}
+                  </p>
+                </>
+              )}
+            </figcaption>
           </figure>
         )}
         {isVideoEmbed && (
@@ -234,8 +289,6 @@ export default function Post({ uri }: PostProps) {
             />
           </div>
         )}
-
-
       </section>
 
       {/* Footer: Post Stats */}
@@ -311,8 +364,11 @@ export default function Post({ uri }: PostProps) {
               className="bsky-reply-count"
             >
               {replyCount > 0
-              ? `${__("Read", "rrze-bluesky")} ${replyCount} ${__("replies on Bluesky", "rrze-bluesky")}`
-              : __("Read on Bluesky", "rrze-bluesky")}
+                ? `${__("Read", "rrze-bluesky")} ${replyCount} ${__(
+                    "replies on Bluesky",
+                    "rrze-bluesky",
+                  )}`
+                : __("Read on Bluesky", "rrze-bluesky")}
             </a>
           </div>
         </div>

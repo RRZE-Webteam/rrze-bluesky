@@ -19,6 +19,8 @@ class API
         $this->password = $password;
         $this->config = $config;
 
+        $this->getAccessToken();
+
         if (!empty($this->config) && !empty($this->config->get('service_baseurl'))) {
             $this->baseUrl = $this->config->get('service_baseurl');
         }
@@ -388,13 +390,7 @@ class API
             return $cached;
         }
 
-        // 1) Ensure we have an access token
-        if (!$this->getAccessToken()) {
-            Helper::debug("No valid Bluesky token to fetch starter pack data.");
-            return null;
-        }
-
-        // 2) Convert bsky.app link -> at:// if needed
+        // Convert bsky.app link -> at:// if needed
         if (!str_starts_with($starterPackUri, 'at://')) {
             $converted = $this->convertBskyStarterPackLinkToAtUri($starterPackUri);
             if (!$converted) {
@@ -404,7 +400,7 @@ class API
             $starterPackUri = $converted;
         }
 
-        // 3) Retrieve the Starter Pack info
+        // Retrieve the Starter Pack info
         $spResponse = $this->getStarterPack($starterPackUri); 
         if (!$spResponse || empty($spResponse['starterPack']['list']['uri'])) {
             Helper::debug("No 'list.uri' found in starter pack response.");

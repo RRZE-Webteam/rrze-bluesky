@@ -10,6 +10,7 @@ import {
   ToolbarGroup,
   ToolbarItem,
   Notice,
+  Placeholder,
 } from "@wordpress/components";
 import "./player.scss";
 import { sanitizeUrl } from "./utils";
@@ -93,6 +94,22 @@ export default function Edit({ attributes, setAttributes }: BskyBlock) {
             </ToolbarItem>
           </ToolbarGroup>
         </BlockControls>
+      )}
+      {(postUrl === "" || urlType === "unknown") && (
+        <Placeholder
+          icon="admin-post"
+          label={__("Bluesky Embed", "bluesky")}
+          instructions={__(
+            "Enter a valid Post or StarterPack URL to display content.",
+            "bluesky",
+          )}
+        >
+          <InputControl
+            label={__("Post or StarterPack URL", "bluesky")}
+            value={postUrl}
+            onChange={onChangeUrl}
+          />
+        </Placeholder>
       )}
       {urlType === "post" && <Post uri={postUrl} />}
       {urlType === "starterPack" && (
