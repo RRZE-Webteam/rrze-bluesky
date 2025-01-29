@@ -81,6 +81,60 @@ class API
     }
 
     /**
+     * Refresh the access token using our refresh token.
+     * Official endpoint: POST /xrpc/com.atproto.server.refreshSession
+     *
+     * @return bool True on success, false on failure
+     */
+    private function refreshSession(): bool
+    {
+        if (empty($this->refreshToken)) {
+            Helper::debug("No refresh token available.");
+            return false;
+        }
+
+        $url = "{$this->baseUrl}/com.atproto.server.refreshSession";
+
+        $args = [
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'Authorization' => "Bearer {$this->refreshToken}",
+            ],
+            'body' => '{}',
+        ];
+
+        $response = wp_remote_post($url, $args);
+        Helper::debug($response);
+
+        if (is_wp_error($response)) {
+            Helper::debug("Refresh session error: " . $response->get_error_message());
+            return false;
+        }
+
+        $body = wp_remote_retrieve_body($response);
+        $decoded = json_decode($body, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || empty($decoded['accessJwt']) || empty($decoded['refreshJwt'])) {
+            Helper::debug("Invalid refresh response: " . $body);
+            return false;
+        }
+
+        // Update our tokens
+        $this->token = $decoded['accessJwt'];
+        $this->refreshToken = $decoded['refreshJwt'];
+
+        // Re-set the transients for the new tokens 
+        $accessTokenTTL  = 3600;
+        $refreshTokenTTL = 86400;
+        set_transient('rrze_bluesky_access_token',  $this->token,        $accessTokenTTL);
+        set_transient('rrze_bluesky_refresh_token', $this->refreshToken, $refreshTokenTTL);
+
+        Helper::debug("Access token successfully refreshed.");
+        return true;
+    }
+
+
+    /**
      * Ruft die Beiträge eines bestimmten Benutzers ab.
      *
      * @param string $did Die DID des Benutzers (z. B. "did:plc:12345").
@@ -218,7 +272,7 @@ class API
         }
         $url = "{$this->baseUrl}/app.bsky.graph.getList";
 
-         $response = $this->makeRequest($url, "GET", $search);
+        $response = $this->makeRequest($url, "GET", $search);
 
         // Falls keine gültige Antwort vorliegt, Abbruch mit null
         if (!$response) {
@@ -275,23 +329,23 @@ class API
         if (empty($search['actor'])) {
             Helper::debug('Required field actor missing.');
         }
-    
+
         $url = "{$this->baseUrl}/app.bsky.actor.getProfile";
         $response = $this->makeRequest($url, "GET", $search);
-    
+
         if (!$response) {
             Helper::debug("Keine Antwort vom Server.");
             return null;
         }
-    
+
         if (is_array($response)) {
             return new Profil($response, $this->config);
         }
-    
+
         Helper::debug("Invalid response from server.");
         return null; // <--- Ensure we return something (null) here as well
     }
-    
+
 
     /*
      * Suchanfrage
@@ -372,7 +426,7 @@ class API
         return $response;
     }
 
-/**
+    /**
      * Retrieve ALL items of a starter pack in one pass, caching in transient.
      *
      * @param string $starterPackUri at://... or https://bsky.app/starter-pack/... link
@@ -401,7 +455,7 @@ class API
         }
 
         // Retrieve the Starter Pack info
-        $spResponse = $this->getStarterPack($starterPackUri); 
+        $spResponse = $this->getStarterPack($starterPackUri);
         if (!$spResponse || empty($spResponse['starterPack']['list']['uri'])) {
             Helper::debug("No 'list.uri' found in starter pack response.");
             return null;
@@ -507,10 +561,12 @@ class API
             ],
         ];
 
+        // If we have an access token, include it
         if ($this->token) {
             $args['headers']['Authorization'] = "Bearer {$this->token}";
         }
 
+        // Build request
         if ($method === "POST" && $data) {
             $args['body'] = json_encode($data);
         }
@@ -520,19 +576,46 @@ class API
             $url .= '?' . $queryString;
         }
 
+        // Execute request
         $response = ($method === "POST")
             ? wp_remote_post($url, $args)
             : wp_remote_get($url, $args);
 
+        // Check for WP errors
         if (is_wp_error($response)) {
-            return $response; // WP_Error-Objekt zurückgeben
+            return $response;
+        }
+
+        // Check HTTP status code
+        $status_code = wp_remote_retrieve_response_code($response);
+        if ($status_code === 401 || $status_code === 403) {
+            // Try to refresh and retry once:
+            Helper::debug("Token might be expired. Attempting to refresh.");
+            if ($this->refreshSession()) {
+                // Rebuild headers with the new access token
+                if ($method === "POST" && $data) {
+                    $args['body'] = json_encode($data);
+                }
+                $args['headers']['Authorization'] = "Bearer {$this->token}";
+
+                $response = ($method === "POST")
+                    ? wp_remote_post($url, $args)
+                    : wp_remote_get($url, $args);
+
+                if (is_wp_error($response)) {
+                    return $response;
+                }
+            } else {
+                Helper::debug("Refresh session failed. Not retrying further.");
+            }
         }
 
         $body = wp_remote_retrieve_body($response);
         $decoded = json_decode($body, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            Helper::debug('json_error', 'Failed to decode JSON: ' . json_last_error_msg());
+            Helper::debug('Failed to decode JSON: ' . json_last_error_msg());
+            return null;
         }
 
         return $decoded;

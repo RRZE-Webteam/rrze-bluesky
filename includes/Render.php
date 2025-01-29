@@ -12,7 +12,7 @@ class Render
 
     public function __construct()
     {
-        add_action('wp_enqueue_scripts', [__CLASS__, 'enqueueStyle']);
+        // add_action('wp_enqueue_scripts', [__CLASS__, 'enqueueStyle']);
 
         $data_encryption = new Encryption();
         $username = $data_encryption->decrypt(get_option('rrze_bluesky_username'));
@@ -37,12 +37,6 @@ class Render
         return $this->api;
     }
 
-    public static function enqueueStyle()
-    {
-        wp_enqueue_style('rrze-bluesky');
-        wp_enqueue_script('rrze-video-front-js');
-        wp_enqueue_style('rrze-video-plyr');
-    }
 
     /**
      * Main entry point for block rendering.
