@@ -14,6 +14,6 @@ class Main
         new Helper();
         new Settings();
         new Blocks();
-        new Rest();
+        new REST();
     }
 }
