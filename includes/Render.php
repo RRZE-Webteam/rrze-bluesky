@@ -4,19 +4,21 @@ namespace RRZE\Bluesky;
 
 use RRZE\Bluesky\Helper;
 use RRZE\Bluesky\Api;
-use The_SEO_Framework\Meta\Robots\Args;
 
 class Render
 {
-    private $api;
+    private ?API $api = null;
 
     public function __construct()
     {
-        // add_action('wp_enqueue_scripts', [__CLASS__, 'enqueueStyle']);
-
         $data_encryption = new Encryption();
         $username = $data_encryption->decrypt(get_option('rrze_bluesky_username'));
         $password = $data_encryption->decrypt(get_option('rrze_bluesky_password'));
+
+        if (empty($username) || empty($password)) {
+            return;
+        }
+
         $api = new API($username, $password);
         $this->setApi($api);
     }
@@ -24,7 +26,7 @@ class Render
     /** 
      * Setter for API 
      */
-    public function setApi($api)
+    public function setApi(API $api): void
     {
         $this->api = $api;
     }
@@ -47,7 +49,10 @@ class Render
         'publicTimeline' => false,
         'uri'            => '',
         'limit'          => 10,
-    ])
+        'isPost'         => false,
+        'isStarterPack'  => false,
+        'hstart'         => 2
+    ]): string
     {
         // Create an instance so we can call non-static methods.
         $renderer = new self();
@@ -100,44 +105,11 @@ class Render
     }
 
     /**
-     * Render a single Bluesky post using the $postData array.
-     * Mirrors the structure and classes from Post.tsx.
-     *
-     * @param array|null $postData The post data array.
-     * @return string Generated HTML string.
+     * Render Post Header
      */
-    public function renderPost($postData, $hideFooter = false)
+    public function renderPostHeader($handle, $displayName, $avatar)
     {
-        if (!$postData || !is_array($postData)) {
-            return '<p>No post data found.</p>';
-        }
-
-        // Extract needed fields safely
-        $author    = isset($postData['author']) && is_array($postData['author']) ? $postData['author'] : [];
-        $record    = isset($postData['record']) && is_array($postData['record']) ? $postData['record'] : [];
-        $embed     = isset($postData['embed'])  && is_array($postData['embed'])  ? $postData['embed']  : [];
-        $uri       = isset($postData['uri']) ? $postData['uri'] : '';
-        $likeCount = isset($postData['likeCount']) ? (int)$postData['likeCount'] : 0;
-        $replyCount = isset($postData['replyCount']) ? (int)$postData['replyCount'] : 0;
-        $repostCount = isset($postData['repostCount']) ? (int)$postData['repostCount'] : 0;
-
-        // Author fields
-        $displayName = isset($author['displayName']) ? $author['displayName'] : '';
-        $handle      = isset($author['handle'])      ? $author['handle']      : '';
-        $avatar      = isset($author['avatar'])      ? $author['avatar']      : '';
-        $createdAt   = isset($author['createdAt'])   ? $author['createdAt']   : '';
-
-        // Post text
-        $postText = isset($record['text']) ? $record['text'] : '';
-
-        // Check if this is a video embed
-        $isVideoEmbed = (isset($embed['$type']) && $embed['$type'] === 'app.bsky.embed.video#view');
-        // Check if this is an embedded record
-        $isRecordEmbed = (isset($embed['$type']) && $embed['$type'] === 'app.bsky.embed.record#view');
-
-        // Start building HTML
-        $html  = '<div class="wp-block-rrze-bluesky-bluesky"><article class="bsky-post">';
-        $html .= '  <header>';
+        $html  = '  <header>';
         $html .= '    <div class="author-information">';
         $html .= '      <a href="' . esc_url($this->getProfileUrl($handle)) . '">';
         $html .= '        <img src="' . esc_url($avatar) . '" alt="' . esc_attr($displayName) . '" />';
@@ -158,9 +130,16 @@ class Render
         $html .= '      </a>';
         $html .= '    </div>';
         $html .= '  </header>';
+        return $html;
+    }
 
+    /**
+     * Render Main Post Content
+     */
+    public function renderPostContent($postText, $embed, $isVideoEmbed = false, $isRecordEmbed = false)
+    {
         // Main Post Content
-        $html .= '  <section class="bsky-post-content">';
+        $html  = '  <section class="bsky-post-content">';
         $html .= '    <p>' . esc_html($postText) . '</p>';
 
         // Check if embed has images
@@ -241,9 +220,20 @@ class Render
         }
 
         $html .= '  </section>';
+        return $html;
+    }
+
+    /**
+     * Render Post Footer
+     */
+    public function renderPostFooter($hideFooter, $handle, $uri, $createdAt, $likeCount, $repostCount, $replyCount)
+    {
+        if ($hideFooter) {
+            return '';
+        }
 
         // Footer with post stats
-        $html .= '  <footer>';
+        $html  = '  <footer>';
         $html .= '    <div class="publication-time">';
 
         if (!empty($createdAt)) {
@@ -300,6 +290,51 @@ class Render
             $html .= '    </div>';
         }
         $html .= '  </footer>';
+        return $html;
+    }
+
+    /**
+     * Render a single Bluesky post using the $postData array.
+     * Mirrors the structure and classes from Post.tsx.
+     *
+     * @param array|null $postData The post data array.
+     * @return string Generated HTML string.
+     */
+    public function renderPost($postData, $hideFooter = false)
+    {
+        if (!$postData || !is_array($postData)) {
+            return '<p>No post data found.</p>';
+        }
+
+        // Extract needed fields safely
+        $author    = isset($postData['author']) && is_array($postData['author']) ? $postData['author'] : [];
+        $record    = isset($postData['record']) && is_array($postData['record']) ? $postData['record'] : [];
+        $embed     = isset($postData['embed'])  && is_array($postData['embed'])  ? $postData['embed']  : [];
+        $uri       = isset($postData['uri']) ? $postData['uri'] : '';
+        $likeCount = isset($postData['likeCount']) ? (int)$postData['likeCount'] : 0;
+        $replyCount = isset($postData['replyCount']) ? (int)$postData['replyCount'] : 0;
+        $repostCount = isset($postData['repostCount']) ? (int)$postData['repostCount'] : 0;
+
+        // Author fields
+        $displayName = isset($author['displayName']) ? $author['displayName'] : '';
+        $handle      = isset($author['handle'])      ? $author['handle']      : '';
+        $avatar      = isset($author['avatar'])      ? $author['avatar']      : '';
+        $createdAt   = isset($author['createdAt'])   ? $author['createdAt']   : '';
+
+        // Post text
+        $postText = isset($record['text']) ? $record['text'] : '';
+
+        // Check if this is a video embed
+        $isVideoEmbed = (isset($embed['$type']) && $embed['$type'] === 'app.bsky.embed.video#view');
+        // Check if this is an embedded record
+        $isRecordEmbed = (isset($embed['$type']) && $embed['$type'] === 'app.bsky.embed.record#view');
+
+        // Start building HTML
+        $html  = '<div class="wp-block-rrze-bluesky-bluesky"><article class="bsky-post">';
+        $html .= $this->renderPostHeader($handle, $displayName, $avatar);
+        $html .= $this->renderPostContent($postText, $embed, $isVideoEmbed, $isRecordEmbed);
+        $html .= $this->renderPostFooter($hideFooter, $handle, $uri, $createdAt, $likeCount, $repostCount, $replyCount);
+
         $html .= '</article></div>';
 
         return $html;
@@ -312,7 +347,6 @@ class Render
      */
     public function retrievePublicTimelineInformation($limit = 10)
     {
-        //TODO: Fix the function
         $response = wp_remote_get(home_url('wp-json/rrze-bluesky/v1/public-timeline?limit=' . $limit));
         if (is_wp_error($response)) {
             return null;
@@ -331,7 +365,6 @@ class Render
      */
     public function renderPublicTimeline($feedData)
     {
-        //TODO: Rethink the function
         if (!$feedData || empty($feedData['feed'])) {
             return '<p>No feed data available.</p>';
         }
@@ -449,14 +482,6 @@ class Render
      * This function determines the correct CSS class to apply based on 
      * the aspect ratio provided in the arguments. If no aspect ratio or an 
      * unrecognized aspect ratio is provided, it defaults to 'ar-16-9'.
-     *
-     * Available aspect ratios and their corresponding CSS classes:
-     * - 4/3     -> ar-4-3
-     * - 21/9    -> ar-21-9
-     * - 1/1     -> ar-1-1
-     * - 2.35/1  -> ar-234-1
-     * - 2.40/1  -> ar-240-1
-     * - 9/16    -> ar-9-16
      * 
      * @param array $arguments Associative array with the 'aspectratio' key potentially set to a string representing the desired aspect ratio.
      * @return string Returns the corresponding CSS class string based on the provided aspect ratio.
@@ -464,20 +489,14 @@ class Render
      */
     public static function get_aspectratio_class($height, $width)
     {
-        // convert height to number
-        $height = (int) $height;
-        $width = (int) $width;
-
-        // Check for division by zero
-        if ($width === 0) {
-            return 'ar-9-16'; // default aspect ratio
-        }
-
-        $aspect_ratio = $height / $width;
-        if ($aspect_ratio > 1) {
-            return 'ar-9-16';
-        } else {
-            return 'ar-9-16';
+        $ratio = round($height / $width, 2);
+        switch (true) {
+            case abs($ratio - (4 / 3)) < 0.01:
+                return 'ar-4-3';
+            case abs($ratio - (16 / 9)) < 0.01:
+                return 'ar-16-9';
+            default:
+                return 'ar-9-16';
         }
     }
 
@@ -584,19 +603,16 @@ class Render
     {
         $renderer = new self();
 
-        // Ensure we have an initialized API object:
         $api = $renderer->getApi();
         if (!$api) {
             return '<p>No API object available.</p>';
         }
 
-        // Retrieve the profile via the API:
         $profileData = $api->getProfile(['actor' => $bskyHandle]);
         if (!$profileData) {
             return '<p>No Bluesky profile found for: ' . esc_html($bskyHandle) . '</p>';
         }
 
-        // Extract relevant fields from $profileData (instance of Profil, see API code).
         $displayName = !empty($profileData->displayName) ? $profileData->displayName : $bskyHandle;
         $handle      = !empty($profileData->handle)      ? $profileData->handle      : $bskyHandle;
         $avatar      = !empty($profileData->avatar)      ? $profileData->avatar      : '';
