@@ -59,7 +59,7 @@ class Settings
                             name="rrze_bluesky_reset"
                             class="button button-secondary"
                             value="<?php esc_attr_e('Reset Credentials', 'rrze-bluesky'); ?>"
-                            
+                        />
                     </form>
                 </div>
         <?php

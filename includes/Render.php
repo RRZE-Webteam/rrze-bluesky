@@ -93,7 +93,14 @@ class Render
      */
     public function retrievePostInformation($uri)
     {
-        $response = wp_remote_get(home_url('wp-json/rrze-bluesky/v1/post?uri=' . urlencode($uri)));
+        $response = wp_remote_get(
+            home_url('wp-json/rrze-bluesky/v1/post?uri=' . urlencode($uri)),
+            [
+                'headers' => [
+                    'X-RRZE-Secret-Key' => get_option('rrze_bluesky_secret_key'),
+                ],
+            ]
+        );
 
         if (is_wp_error($response)) {
             return null;
@@ -306,6 +313,8 @@ class Render
             return '<p>No post data found.</p>';
         }
 
+        Helper::debug($postData);
+
         // Extract needed fields safely
         $author    = isset($postData['author']) && is_array($postData['author']) ? $postData['author'] : [];
         $record    = isset($postData['record']) && is_array($postData['record']) ? $postData['record'] : [];
@@ -347,7 +356,11 @@ class Render
      */
     public function retrievePublicTimelineInformation($limit = 10)
     {
-        $response = wp_remote_get(home_url('wp-json/rrze-bluesky/v1/public-timeline?limit=' . $limit));
+        $response = wp_remote_get(home_url('wp-json/rrze-bluesky/v1/public-timeline?limit=' . $limit), [
+            'headers' => [
+                'X-RRZE-Secret-Key' => get_option('rrze_bluesky_secret_key'),
+            ],
+        ]);
         if (is_wp_error($response)) {
             return null;
         }
@@ -576,7 +589,11 @@ class Render
         }
 
         $endpoint = home_url('wp-json/rrze-bluesky/v1/list');
-        $response = wp_remote_get(add_query_arg(['starterPack' => urlencode($uri)], $endpoint));
+        $response = wp_remote_get(add_query_arg(['starterPack' => urlencode($uri)], $endpoint), [
+            'headers' => [
+                'X-RRZE-Secret-Key' => get_option('rrze_bluesky_secret_key'),
+            ],
+        ]);
 
         if (is_wp_error($response)) {
             return null;

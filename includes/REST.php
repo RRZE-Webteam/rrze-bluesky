@@ -239,16 +239,29 @@ class REST
      */
     public function permissionCheck(WP_REST_Request $request)
     {
-        if (!is_user_logged_in()) {
-            return new WP_Error(
-                'rest_forbidden',
-                esc_html__('You are not allowed to access this endpoint.', 'text-domain'),
-                ['status' => 401]
-            );
+        if (is_user_logged_in()) {
+            return true;
         }
 
-        return true;
+        if (!get_option('rrze_bluesky_secret_key')) {
+            update_option('rrze_bluesky_secret_key', wp_generate_password(32, false));
+        }
+        
+
+        $secret_key = get_option('rrze_bluesky_secret_key'); // Store this in WP settings
+        $provided_key = $request->get_header('X-RRZE-Secret-Key');
+
+        if ($provided_key && hash_equals($secret_key, $provided_key)) {
+            return true;
+        }
+
+        return new WP_Error(
+            'rest_forbidden',
+            esc_html__('You are not allowed to access this endpoint.', 'text-domain'),
+            ['status' => 401]
+        );
     }
+
 
     /**
      * Handler for GET /rrze-bluesky/v1/starter-pack
