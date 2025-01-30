@@ -30,7 +30,6 @@ class Post {
     public ?array $embeds;
     public ?array $facets;
     public ?array $langs;
-    public ?Config $config;
     public int $likeCount;
     public int $repostCount;
     public int $replyCount;
@@ -39,7 +38,7 @@ class Post {
     public ?array $labels;
     private array $rawdata;
     
-    public function __construct(array $data, ?Config $config = null) {
+    public function __construct(array $data) {
         
         // echo var_dump($data);
         
@@ -61,7 +60,6 @@ class Post {
         $this->author = new Profil($data['author']);
         $this->viewer = $data['viewer'] ?? null;    
         $this->labels = $data['labels'] ?? null;   
-        $this->config = $config ?? null;
         
         // Everything else move in rawdata       
         $usedKeys = [
@@ -83,9 +81,6 @@ class Post {
         
     }
     
-    public function setConfig(Config $config) {
-        return $this->config = $config;
-    }
     public function getAutorHandle(): ?string {
         return $this->author->handle ?? null;
     }
@@ -124,9 +119,7 @@ class Post {
         }
         
         $limit = 80;
-        if ($this->config) {
-            $limit = $this->config->get('exerpt-length');
-        }
+
         $textExcerpt = $this->text ? substr(str_replace(["\r", "\n"], ' ', $this->text), 0, $limit)
         : 'N/A';
         

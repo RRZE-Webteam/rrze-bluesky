@@ -9,41 +9,36 @@ class API
     private string $baseUrl = "https://bsky.social/xrpc";
     private ?string $token = null;
     private ?string $refreshToken = null;
-    private ?Config $config = null;
-    private $username;
-    private $password;
+    private string $username;
+    private string $password;
 
-    public function __construct($username, $password, ?Config $config = null)
+    public function __construct($username, $password)
     {
         $this->username = $username;
         $this->password = $password;
-        $this->config = $config;
 
-        $this->getAccessToken();
-
-        if (!empty($this->config) && !empty($this->config->get('service_baseurl'))) {
-            $this->baseUrl = $this->config->get('service_baseurl');
-        }
-
-        // Load Refresh Token from transient if set
+        // I | Attempt: Load Tokens from Transient if set
         $storedRefreshToken = get_transient('rrze_bluesky_refresh_token');
+        $storedAccessToken = get_transient('rrze_bluesky_access_token');
+
         if ($storedRefreshToken) {
             $this->refreshToken = $storedRefreshToken;
         }
 
-        // Load Access Token from transient if set
-        $storedAccessToken = get_transient('rrze_bluesky_access_token');
         if ($storedAccessToken) {
             $this->token = $storedAccessToken;
+        }
+
+        // II | Attempt: Login if no tokens are set
+        if (!$this->token) {
+            $this->getAccessToken();
         }
     }
 
     /**
-     * Loggt sich ein und speichert das Access-Token.
+     * Retrieve the access token for the current user and store it as transient.
      *
-     * @param string $username Bluesky-Benutzername.
-     * @param string $password Bluesky-Passwort.
-     * @return string|null Das Access-Token oder null, falls der Login fehlschlägt.
+     * @return string|null
      */
     public function getAccessToken(): ?string
     {
@@ -52,33 +47,57 @@ class API
         }
 
         $url = "{$this->baseUrl}/com.atproto.server.createSession";
-
         $data = [
             "identifier"    => $this->username,
             "password"      => $this->password,
         ];
 
         $response = $this->makeRequest($url, "POST", $data);
-
         if (is_wp_error($response)) {
             Helper::debug("Authentication error: " . $response->get_error_message());
             return null;
         }
 
-        if (isset($response['accessJwt']) && isset($response['refreshJwt'])) {
+        if (!empty($response['accessJwt']) && !empty($response['refreshJwt'])) {
             $this->token = $response['accessJwt'];
             $this->refreshToken = $response['refreshJwt'];
 
-            $accessTokenTTL  = 3600;  // 1 hour
-            $refreshTokenTTL = 86400; // 1 day
-            set_transient('rrze_bluesky_access_token',  $this->token,        $accessTokenTTL);
-            set_transient('rrze_bluesky_refresh_token', $this->refreshToken, $refreshTokenTTL);
+            // Store the tokens as transients
+            set_transient('rrze_bluesky_access_token',  $this->token,        HOUR_IN_SECONDS);
+            set_transient('rrze_bluesky_refresh_token', $this->refreshToken, DAY_IN_SECONDS);
 
             return $this->token;
         }
 
+        // If the API doesn't return a valid token, we can't proceed
+        Helper::debug("No valid token fields found in login response.");
         return null;
     }
+
+    private function requireAccessToken(): void
+    {
+        // If we already have a token, we're good
+        if ($this->token) {
+            return;
+        }
+
+        // If we have a refresh token, try to refresh
+        if ($this->refreshToken) {
+            $refreshed = $this->refreshSession();
+            if ($refreshed && $this->token) {
+                return;
+            }
+        }
+
+        // Fallback: Attempt to get a new token
+        $this->getAccessToken();
+
+        if (!$this->token) {
+            throw new \Exception("Unable to acquire access token. Please check credentials.");
+            return;
+        }
+    }
+
 
     /**
      * Refresh the access token using our refresh token.
@@ -94,7 +113,6 @@ class API
         }
 
         $url = "{$this->baseUrl}/com.atproto.server.refreshSession";
-
         $args = [
             'headers' => [
                 'Content-Type' => 'application/json',
@@ -104,10 +122,9 @@ class API
         ];
 
         $response = wp_remote_post($url, $args);
-        Helper::debug($response);
-
         if (is_wp_error($response)) {
             Helper::debug("Refresh session error: " . $response->get_error_message());
+            $this->removeStaleRefreshAndAccessToken();
             return false;
         }
 
@@ -116,94 +133,80 @@ class API
 
         if (json_last_error() !== JSON_ERROR_NONE || empty($decoded['accessJwt']) || empty($decoded['refreshJwt'])) {
             Helper::debug("Invalid refresh response: " . $body);
+            $this->removeStaleRefreshAndAccessToken();
             return false;
         }
 
         // Update our tokens
-        $this->token = $decoded['accessJwt'];
+        $this->token        = $decoded['accessJwt'];
         $this->refreshToken = $decoded['refreshJwt'];
 
         // Re-set the transients for the new tokens 
-        $accessTokenTTL  = 3600;
-        $refreshTokenTTL = 86400;
-        set_transient('rrze_bluesky_access_token',  $this->token,        $accessTokenTTL);
-        set_transient('rrze_bluesky_refresh_token', $this->refreshToken, $refreshTokenTTL);
+        set_transient('rrze_bluesky_access_token',  $this->token,        HOUR_IN_SECONDS);
+        set_transient('rrze_bluesky_refresh_token', $this->refreshToken, DAY_IN_SECONDS);
 
         Helper::debug("Access token successfully refreshed.");
         return true;
     }
 
+    private function removeStaleRefreshAndAccessToken(): void
+    {
+        $this->refreshToken = null;
+        delete_transient('rrze_bluesky_refresh_token');
+        $this->token = null;
+        delete_transient('rrze_bluesky_access_token');
+        Helper::debug("Removed stale refresh token after failed attempt.");
+    }
+
 
     /**
-     * Ruft die Beiträge eines bestimmten Benutzers ab.
+     * Retrieve the public feed.
      *
-     * @param string $did Die DID des Benutzers (z. B. "did:plc:12345").
-     * @return array|null Die Beiträge des Benutzers oder null bei Fehlern.
+     * @param string $did User's DID (f.E. "did:plc:12345").
+     * @return array|null The public feed or null on error.
      */
     public function getAuthorFeed(string $did): ?array
     {
-        if (!$this->token) {
-            throw new \Exception("Access token is required. Call getAccessToken() first.");
-        }
-        $params = '';
-        if (!empty($this->config->get('query_getAuthorFeed'))) {
-            if (isset($this->config->get('query_getAuthorFeed')['filter'])) {
-                $params .= '&filter=' . $this->config->get('query_getAuthorFeed')['filter'];
-            }
-            if (isset($this->config->get('query_getAuthorFeed')['limit'])) {
-                $params .= '&limit=' . $this->config->get('query_getAuthorFeed')['limit'];
-            }
-        }
-
+        $this->requireAccessToken();
         $url = "{$this->baseUrl}/app.bsky.feed.getAuthorFeed?actor={$did}";
-        if (!empty($params)) {
-            $url .= $params;
-        }
 
         return $this->makeRequest($url, "GET");
     }
 
     /**
-     * Ruft einen bestimmten Post auf.
+     * Retrieve the public feed.
      *
      * @param string $uri . Bspw: at://did:plc:wyxbu4v7nqt6up3l3camwtnu/app.bsky.feed.post/3lemy4yerrk27
      * @return array|null . Die Daten des Posts, wenn gefunden
      */
     public function getPosts(string $uri)
     {
-        if (!$this->token) {
-            throw new \Exception("Access token is required. Call getAccessToken() first.");
-        }
+        $this->requireAccessToken();
         $data = [
             'uris' => [$uri], // AT URI(s) as input
         ];
         $url = "{$this->baseUrl}/app.bsky.feed.getPosts";
-
-        // API-Aufruf über die makeRequest-Methode
         $response = $this->makeRequest($url, "GET", $data);
 
         if (!$response || empty($response['posts'])) {
-            error_log("No post found for: $uri");
+            Helper::debug("No post found for: $uri");
             return null;
         }
 
-        // Den ersten Post im Array nehmen (da wir nur einen URI übergeben haben)
-        $postData = $response['posts'][0];
-        // Rückgabe des Posts als Post-Objekt
+        // Extract the first post
+        $postData = $response['posts'][0]; 
         return $postData;
     }
 
 
     /**
-     * Beispiel: Ruft die öffentliche Timeline ab.
+     * Retrieve the public feed.
      *
-     * @return array|null Die öffentliche Timeline oder null bei Fehlern.
+     * @return array|null The public feed or null on error.
      */
     public function getPublicTimeline(): ?array
     {
-        if (!$this->token) {
-            Helper::debug("Access token is required. Call getAccessToken() first.");
-        }
+        $this->requireAccessToken();
 
         $url = "{$this->baseUrl}/app.bsky.feed.getTimeline";
 
@@ -223,35 +226,21 @@ class API
      */
     public function getLists(array $search): ?array
     {
-        if (!$this->token) {
-            Helper::debug("Access token is required. Call getAccessToken() first.");
-        }
+        $this->requireAccessToken();
         if (empty($search['actor'])) {
             Helper::debug('Required field actor (of type at-identifier) missing.');
         }
         $url = "{$this->baseUrl}/app.bsky.graph.getLists";
-
-        // Werte aus der Config laden
-        $configParams = $this->config->get('query_getlists') ?? [];
-
-        // Fehlende Werte aus der Config ergänzen
-        foreach ($configParams as $key => $value) {
-            if (!array_key_exists($key, $search) || $search[$key] === null || $search[$key] === '') {
-                $search[$key] = $value;
-            }
-        }
         $response = $this->makeRequest($url, "GET", $search);
 
-        // Falls keine sinnvolle Antwort vorliegt oder 'lists' nicht vorhanden ist, null zurückgeben
         if (!$response || !isset($response['lists']) || !is_array($response['lists'])) {
             return null;
         }
 
-        // Jedes Element in 'lists' in ein Objekt der Klasse Lists umwandeln
         $listsObjects = [];
         foreach ($response['lists'] as $num => $listData) {
 
-            $listsObjects[] = new Lists($listData, $this->config);
+            $listsObjects[] = new Lists($listData);
         }
 
         return $listsObjects;
@@ -264,9 +253,7 @@ class API
      */
     public function getList(array $search): ?array
     {
-        if (!$this->token) {
-            Helper::debug("Access token is required. Call getAccessToken() first.");
-        }
+        $this->requireAccessToken();
         if (empty($search['list'])) {
             Helper::debug('Required field list (of type at-uri) missing.');
         }
@@ -274,31 +261,25 @@ class API
 
         $response = $this->makeRequest($url, "GET", $search);
 
-        // Falls keine gültige Antwort vorliegt, Abbruch mit null
         if (!$response) {
             return null;
         }
 
-        // Erwartete Felder prüfen
         if (!isset($response['list'], $response['items'])) {
-            // Wenn Felder fehlen, kann man hier entweder null oder eine Exception werfen
             return null;
         }
 
-        // Umwandeln des Feldes 'list' in ein Listen-Objekt (Class Lists)
-        $listsObject = new Lists($response['list'], $this->config);
+        $listsObject = new Lists($response['list']);
         $cursor = isset($response['cursor']) ? (string) $response['cursor'] : '';
 
         $items = [];
         if (isset($response['items']) && is_array($response['items'])) {
             foreach ($response['items'] as $item) {
-                // uri als string
                 $uri = $item['uri'] ?? '';
 
-                // subject als Profil-Objekt
                 $profilObj = null;
                 if (isset($item['subject']) && is_array($item['subject'])) {
-                    $profilObj = new Profil($item['subject'], $this->config);
+                    $profilObj = new Profil($item['subject']);
                 }
 
                 $items[] = [
@@ -308,7 +289,6 @@ class API
             }
         }
 
-        // Rückgabe als assoziatives Array
         return [
             'cursor' => $cursor,
             'list'   => $listsObject,
@@ -323,9 +303,7 @@ class API
      */
     public function getProfile(array $search): ?Profil
     {
-        if (!$this->token) {
-            Helper::debug("Access token is required. Call getAccessToken() first.");
-        }
+        $this->requireAccessToken();
         if (empty($search['actor'])) {
             Helper::debug('Required field actor missing.');
         }
@@ -339,55 +317,11 @@ class API
         }
 
         if (is_array($response)) {
-            return new Profil($response, $this->config);
+            return new Profil($response);
         }
 
         Helper::debug("Invalid response from server.");
-        return null; // <--- Ensure we return something (null) here as well
-    }
-
-
-    /*
-     * Suchanfrage
-     */
-    public function searchPosts(array $search): ?array
-    {
-        $endpoint = "{$this->baseUrl}/app.bsky.feed.searchPosts";
-
-        if (empty($search['q'])) {
-            throw new \InvalidArgumentException('Required field q for the search string is missing.');
-        }
-
-        $configParams = $this->config->get('query_searchPosts') ?? [];
-
-        foreach ($configParams as $key => $value) {
-            if (!array_key_exists($key, $search) || $search[$key] === null || $search[$key] === '') {
-                $search[$key] = $value;
-            }
-        }
-
-        $response = $this->makeRequest($endpoint, 'GET', $search);
-
-        if (!$response) {
-            error_log('No results found.');
-            return null;
-        }
-
-        if (!isset($response['posts'])) {
-            throw new \RuntimeException('Invalid api response');
-        }
-
-        $posts = [];
-        foreach ($response['posts'] as $postData) {
-            $posts[] = new Post($postData);
-        }
-
-        return [
-            'cursor' => $response['cursor'] ?? '',
-            'hitsTotal' => (int) ($response['hitsTotal'] ?? count($posts)),
-            'posts' => $posts
-        ];
-        return $response;
+        return null;
     }
 
     /**
@@ -399,10 +333,7 @@ class API
      */
     public function getStarterPack(string $starterPackUri): ?array
     {
-        if (!$this->token) {
-            Helper::debug("Access token is required. Call getAccessToken() first.");
-        }
-
+        $this->requireAccessToken();
         if (empty($starterPackUri)) {
             Helper::debug("starterPack parameter is required.");
         }

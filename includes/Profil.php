@@ -32,12 +32,11 @@ class Profil {
     public int $followersCount;
     public int $followsCount;
     public int $postsCount;
-    private ?Config $config;
     public ?array $labels;
     public ?array $pinnedPost;
     private array $rawdata;
     
-    public function __construct(array $data, ?Config $config = null) {
+    public function __construct(array $data) {
         $this->did = $data['did'] ?? '';
         $this->handle = $data['handle'] ?? '';
         $this->displayName = $data['displayName'] ?? '';
@@ -52,7 +51,6 @@ class Profil {
         $this->followersCount = (int) ($data['followersCount'] ?? 0);
         $this->followsCount= (int) ($data['followsCount'] ?? 0);
         $this->postsCount= (int) ($data['postsCount'] ?? 0);
-        $this->config = $config ?? null;
         
         // Everything else move in rawdata       
         $usedKeys = [
@@ -73,11 +71,6 @@ class Profil {
         $remaining = array_diff_key($data, array_flip($usedKeys));
         $this->rawdata = $remaining;
     }
-    
-    public function setConfig(Config $config) {
-        return $this->config = $config;
-    }
-       
     
     public function getRawData(): array {
         return $this->rawdata;
