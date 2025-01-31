@@ -8,6 +8,14 @@ export interface IStarterPackRoot {
   starterPack: IStarterPack;
 }
 
+interface Error {
+  code: string;
+  message: string;
+  data: {
+    status: number;
+  };
+}
+
 /**
  * The object under the "starterPack" key.
  */
@@ -245,6 +253,55 @@ export default function StarterPack({ uri }: StarterPackProps) {
   }
 
   if (error) {
+    console.log(error);
+    if (error.data.status === 401) {
+      return (
+        <>
+          <Notice status="error" isDismissible={false}>
+            <>
+              Error:{" "}
+              {__(
+                "Authentification failed. Please make sure, that you entered your correct bsky credentials to connect to the Bluesky API.",
+                "rrze-bluesky",
+              )}
+            </>
+          </Notice>
+          <Notice status="info" isDismissible={false}>
+            <>
+              <h2 style={{ fontSize: "2rem" }}>
+                {__("How to login and connect to the Bsky API", "rrze-bluesky")}
+              </h2>
+              <ol>
+                <li>
+                  <a
+                    href="/wp-admin/options-general.php?page=rrze-bluesky"
+                    target="_blank"
+                  >
+                    {__(
+                      "Navigate Dashboard > Settings > RRZE Bluesky.",
+                      "rrze-bluesky",
+                    )}
+                  </a>
+                </li>
+                <li>
+                  {__(
+                    "Enter your Bluesky credentials to establish a connection with the Bsky-API.",
+                    "rrze-bluesky",
+                  )}
+                </li>
+                <li>
+                  {__(
+                    "Refresh the current page or post inside the Blockeditor you are working on.",
+                    "rrze-bluesky",
+                  )}
+                </li>
+              </ol>
+            </>
+          </Notice>
+        </>
+      );
+    }
+
     return (
       <Notice status="error" isDismissible={false}>
         Error: {error.message}

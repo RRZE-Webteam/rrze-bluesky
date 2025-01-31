@@ -34,34 +34,34 @@ class Settings
      */
     public function renderSettingsPage()
     {
-        ?>
-                <div class="wrap">
-                    <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
-                    <p class="about-text"><?php esc_html_e("Settings for RRZE Bluesky Plugin.", "rrze-bluesky"); ?></p>
-                    <hr />
+?>
+        <div class="wrap">
+            <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+            <p class="about-text"><?php esc_html_e("Settings for RRZE Bluesky Plugin.", "rrze-bluesky"); ?></p>
+            <hr />
 
-                    <!-- WP Settings Form -->
-                    <form action="options.php" method="post">
-                        <?php
-                        // Security fields for the registered setting:
-                        settings_fields('rrze-bluesky-settings-group');
+            <!-- WP Settings Form -->
+            <form action="options.php" method="post">
+                <?php
+                // Security fields for the registered setting:
+                settings_fields('rrze-bluesky-settings-group');
 
-                        // Output the settings sections and fields
-                        do_settings_sections('rrze-bluesky');
+                // Output the settings sections and fields
+                do_settings_sections('rrze-bluesky');
 
-                        // Default WP "Save Changes" button
-                        submit_button(__('Save Changes', 'rrze-bluesky'));
+                // Default WP "Save Changes" button
+                submit_button(__('Save Changes', 'rrze-bluesky'));
 
-                        // Then our custom reset button:
-                        wp_nonce_field('rrze_bluesky_reset_action', 'rrze_bluesky_reset_nonce');
-                        ?>
-                        <input type="submit"
-                            name="rrze_bluesky_reset"
-                            class="button button-secondary"
-                            value="<?php esc_attr_e('Reset Credentials', 'rrze-bluesky'); ?>"
-                    </form>
-                </div>
-        <?php
+                // Then our custom reset button:
+                wp_nonce_field('rrze_bluesky_reset_action', 'rrze_bluesky_reset_nonce');
+                ?>
+                <input type="submit"
+                    name="rrze_bluesky_reset"
+                    class="button button-secondary"
+                    value="<?php esc_attr_e('Reset Credentials', 'rrze-bluesky'); ?>" />
+            </form>
+        </div>
+<?php
 
         // After the form, try displaying the user’s profile if a handle is saved:
         $encryptedUsername = get_option('rrze_bluesky_username');
@@ -89,16 +89,20 @@ class Settings
             return;
         }
 
-        // Instantiate API with the user’s credentials:
-        $api = new API($decryptedUsername, $decryptedPassword);
+        try {
+            // Instantiate API with the user’s credentials:
+            $api = new API($decryptedUsername, $decryptedPassword);
 
-        // Create a new Render instance and ensure it uses the same API instance:
-        $renderer = new Render();
-        $renderer->setApi($api);
+            // Create a new Render instance and ensure it uses the same API instance:
+            $renderer = new Render();
+            $renderer->setApi($api);
 
-        // Render the personal profile card:
-        echo '<h2>' . __("Currently connected Bluesky-User:", "rrze-bluesky") . '</h2>';
-        echo $renderer->renderPersonalProfile($decryptedUsername);
+            // Render the personal profile card:
+            echo '<h2>' . __("Currently connected Bluesky-User:", "rrze-bluesky") . '</h2>';
+            echo $renderer->renderPersonalProfile($decryptedUsername);
+        } catch (\Exception $e) {
+            echo '<p>' . esc_html__('Error fetching profile:', 'rrze-bluesky') . ' ' . esc_html($e->getMessage()) . '</p>';
+        }
     }
 
     /**
@@ -106,9 +110,9 @@ class Settings
      */
     public function initializeSettings()
     {
+        $this->handleResetCredentials();
         $this->addOption();
         $this->registerSettings();
-        $this->handleResetCredentials();
     }
 
     /**
@@ -199,9 +203,9 @@ class Settings
     public function apiPasswordFieldCallback()
     {
         $token        = get_option('rrze_bluesky_password') || '';
-        $displayValue = (!empty($token) || '') ? str_repeat('*', 8) : '';
+        $displayValue = (!empty($token) || $token = '') ? str_repeat('*', 8) : '';
 
-        echo '<input type="text" name="rrze_bluesky_password" value="' . esc_attr($displayValue) . '" />';
+        echo '<input type="password" name="rrze_bluesky_password" value="' . esc_attr($displayValue) . '" />';
     }
 
     /**
@@ -209,15 +213,16 @@ class Settings
      */
     public function sanitizeApiKey($input)
     {
-        $data_encryption = new Encryption();
-
-        // Basic string sanitization
         $clean = sanitize_text_field($input);
-
-        // Encrypt the clean value
+    
+        if ($clean === '') {
+            return '';
+        }
+    
+        $data_encryption = new Encryption();
         return $data_encryption->encrypt($clean);
     }
-
+    
 
     /**
      * Check if the reset button has been pressed and, if so, clear credentials and transients.
@@ -230,12 +235,28 @@ class Settings
 
         check_admin_referer('rrze_bluesky_reset_action', 'rrze_bluesky_reset_nonce');
 
-        update_option('rrze_bluesky_username', '');
-        update_option('rrze_bluesky_password', '');
+        delete_option('rrze_bluesky_username');
+        delete_option('rrze_bluesky_password');
+        delete_option('rrze_bluesky_secret_key');
+    
+        delete_transient('rrze_bluesky_refresh_token');
+        delete_transient('rrze_bluesky_access_token');
+
 
         unset($_POST['rrze_bluesky_username']);
         unset($_POST['rrze_bluesky_password']);
 
+        $this->deleteTransients();
+        
+        add_action('admin_notices', function () {
+            echo '<div class="notice notice-success is-dismissible"><p>'
+                . esc_html__('Bluesky credentials reset successfully.', 'rrze-bluesky')
+                . '</p></div>';
+        });
+    }
+
+    private function deleteTransients()
+    {
         global $wpdb;
         $like_pattern    = $wpdb->esc_like('_transient_rrze_bluesky_') . '%';
         $timeout_pattern = $wpdb->esc_like('_transient_timeout_rrze_bluesky_') . '%';
@@ -251,11 +272,5 @@ class Settings
             $transient = str_replace('_transient_', '', $option_name);
             delete_transient($transient);
         }
-
-        add_action('admin_notices', function () {
-            echo '<div class="notice notice-success is-dismissible"><p>'
-                . esc_html__('Bluesky credentials reset successfully.', 'rrze-bluesky')
-                . '</p></div>';
-        });
     }
 }

@@ -38,5 +38,7 @@
   "textdomain": "rrze-elements-bluesky",
   "editorScript": "file:./index.ts",
   "editorStyle": "file:./index.css",
-  "style": "file:./style-index.css"
+  "style": "file:./style-index.css",
+  "viewStyle": ["rrze-bluesky","rrze-video-plyr"],
+  "viewScript": "rrze-video-front-js"
 }

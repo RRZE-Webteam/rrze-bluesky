@@ -33,9 +33,8 @@ class Lists {
     public ?array $labels;
     public ?array $viewer;
     private ?array $rawdata;
-    private ?Config $config;
     
-    public function __construct(array $data, ?Config $config = null) {
+    public function __construct(array $data) {
         $this->uri = $data['uri'] ?? '';
         $this->cid = $data['cid'] ?? '';
         $this->creator = new Profil($data['creator']);
@@ -48,8 +47,6 @@ class Lists {
         $this->purpose = $data['purpose'] ?? null;
         $this->descriptionFacets = $data['descriptionFacets'] ?? null;
         $this->listItemCount = (int) ($data['listItemCount'] ?? 0);     
-
-        $this->config = $config ?? null;
         
         // Everything else move in rawdata       
         $usedKeys = [
@@ -69,11 +66,6 @@ class Lists {
         $remaining = array_diff_key($data, array_flip($usedKeys));
         $this->rawdata = $remaining;
     }
-    
-    public function setConfig(Config $config) {
-        return $this->config = $config;
-    }
-       
     
     public function getRawData(): array {
         return $this->rawdata;

@@ -11,6 +11,7 @@ class Blocks
     public function __construct()
     {
         add_action('init', [$this, 'rrze_rrze_bluesky_block_init']);
+        add_action( 'wp_enqueue_scripts', [$this, 'rrze_register_style']);
         add_filter('block_categories', [$this, 'my_custom_block_category'], 10, 2);
     }
 
@@ -20,13 +21,12 @@ class Blocks
     public function rrze_rrze_bluesky_block_init()
     {
         $this->rrze_register_blocks_and_translations();
-        $this->rrze_register_style();
     }
 
     /**
      * Register the block styles for the frontend.
      */
-    private function rrze_register_style()
+    public function rrze_register_style()
     {
         wp_register_style(
             'rrze-bluesky',
@@ -34,6 +34,10 @@ class Blocks
             [],
             filemtime(plugin_dir_path(__DIR__) . 'css/rrze-bluesky.css')
         );
+
+        // wp_enqueue_style('rrze-bluesky');
+        // wp_enqueue_script('rrze-video-front-js');
+        // wp_enqueue_style('rrze-video-plyr');
     }
 
     /**

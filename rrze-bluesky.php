@@ -43,6 +43,8 @@ spl_autoload_register(function ($class) {
     }
 });
 
+register_deactivation_hook(__FILE__, __NAMESPACE__ . '\deactivation');
+
 add_action('plugins_loaded', __NAMESPACE__ . '\loaded');
 
 /**
@@ -68,6 +70,19 @@ function systemRequirements(): string
         );
     }
     return $error;
+}
+
+/**
+ * Deactivation callback function
+ */
+function deactivation()
+{
+    delete_option('rrze_bluesky_username');
+    delete_option('rrze_bluesky_password');
+    delete_option('rrze_bluesky_secret_key');
+
+    delete_transient('rrze_bluesky_refresh_token');
+    delete_transient('rrze_bluesky_access_token');
 }
 
 /**

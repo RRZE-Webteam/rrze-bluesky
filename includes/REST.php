@@ -27,7 +27,7 @@ class REST
     /** 
      * Setter for API 
      */
-    public function setApi($api)
+    public function setApi(API $api): void
     {
         $this->api = $api;
     }
@@ -35,7 +35,7 @@ class REST
     /**
      * Getter for API
      */
-    public function getApi()
+    public function getApi(): API
     {
         return $this->api;
     }
@@ -62,6 +62,7 @@ class REST
                     },
                 ],
             ],
+            'permission_callback' => [$this, 'permissionCheck'],
         ]);
 
         register_rest_route('rrze-bluesky/v1', '/starter-pack', [
@@ -106,7 +107,7 @@ class REST
                         'description' => 'Pagination cursor for the next page of results.',
                     ],
                 ],
-            ]
+            ],
         );
     }
 
@@ -132,7 +133,6 @@ class REST
 
         $token = $api->getAccessToken();
         if (!$token) {
-            Helper::debug('Fehler bei der Authentifizierung.');
             return new WP_Error(
                 'no_token',
                 __('Authentication failed.', 'rrze-bluesky'),
@@ -184,19 +184,19 @@ class REST
 
         // Example: https://bsky.app/profile/ej64ojyw.bsky.social/post/3lfffxovnes2m
         $host = parse_url($url, PHP_URL_HOST);  // e.g. "bsky.app"
-        $path = parse_url($url, PHP_URL_PATH);  // e.g. "/profile/ej64ojyw.bsky.social/post/3lfffxovnes2m"
+        $path = parse_url($url, PHP_URL_PATH);  // e.g. "/profile/username.bsky.social/post/3lfffxovnes2m"
 
         if (!$host || !$path || !str_contains($host, 'bsky.app')) {
             return null; // Not a recognized bsky link
         }
 
         $segments = explode('/', trim($path, '/'));
-        // segments => ["profile","ej64ojyw.bsky.social","post","3lfffxovnes2m"]
+        // segments => ["profile","username.bsky.social","post","3lfffxovnes2m"]
         if (count($segments) < 4 || $segments[0] !== 'profile' || $segments[2] !== 'post') {
             return null;
         }
 
-        $handle = $segments[1]; // e.g. "ej64ojyw.bsky.social"
+        $handle = $segments[1]; // e.g. "username.bsky.social"
         $postId = $segments[3]; // e.g. "3lfffxovnes2m"
 
         $profile = $this->getApi()->getProfile(['actor' => $handle]);
@@ -238,16 +238,29 @@ class REST
      */
     public function permissionCheck(WP_REST_Request $request)
     {
-        if (!is_user_logged_in()) {
-            return new WP_Error(
-                'rest_forbidden',
-                esc_html__('You are not allowed to access this endpoint.', 'text-domain'),
-                ['status' => 401]
-            );
+        if (is_user_logged_in()) {
+            return true;
         }
 
-        return true;
+        if (!get_option('rrze_bluesky_secret_key')) {
+            update_option('rrze_bluesky_secret_key', wp_generate_password(32, false));
+        }
+        
+
+        $secret_key = get_option('rrze_bluesky_secret_key'); // Store this in WP settings
+        $provided_key = $request->get_header('X-RRZE-Secret-Key');
+
+        if ($provided_key && hash_equals($secret_key, $provided_key)) {
+            return true;
+        }
+
+        return new WP_Error(
+            'rest_forbidden',
+            esc_html__('You are not allowed to access this endpoint.', 'text-domain'),
+            ['status' => 401]
+        );
     }
+
 
     /**
      * Handler for GET /rrze-bluesky/v1/starter-pack
@@ -269,6 +282,16 @@ class REST
         // Automatically convert if it's not already "at://..."
         if (!str_starts_with($starterPackUri, 'at://')) {
             $converted = $this->convertBskyStarterPackLinkToAtUri($starterPackUri);
+            if (empty($converted)) {
+                return new \WP_Error(
+                    'invalid_starterpack_uri',
+                    __(
+                        'Unauthorized to access the requested starter pack.',
+                        'rrze-bluesky'
+                    ),
+                    ['status' => 401]
+                );
+            }
             if (!$converted) {
                 return new \WP_Error(
                     'invalid_starterpack_uri',
@@ -294,12 +317,20 @@ class REST
 
         // Call your $api->getStarterPack() with the newly-converted at:// URI
         try {
-            $starterPackData = $api->getStarterPack($starterPackUri);
+            $starterPackData = $api->getStarterPack($starterPackUri) ?? null;
             if (!$starterPackData) {
                 return new \WP_Error(
                     'starter_pack_not_found',
                     __('No data returned for the given starterPack URI.', 'rrze-bluesky'),
                     ['status' => 404]
+                );
+            }
+
+            if(empty($starterPackData)) {
+                return new \WP_Error(
+                    'no_list_uri',
+                    __('No "list.uri" found in the retrieved starter pack.', 'rrze-bluesky'),
+                    ['status' => 400]
                 );
             }
 
@@ -337,18 +368,18 @@ class REST
         $limit           = $request->get_param('limit');        // Optional
         $cursor          = $request->get_param('cursor');       // Optional
 
-        // 1) If user didn't pass 'list' but provided 'starterPack', 
-        //    we retrieve that starter pack to find the list.uri
+        // I | If user didn't pass 'list' but provided 'starterPack', retrieve the list URI first
         if (!$listParam && $starterPackParam) {
-            // Construct a mock request to call getStarterPackHandler
             $mockRequest = new WP_REST_Request('GET', '/rrze-bluesky/v1/starter-pack');
             $mockRequest->set_param('starterPack', $starterPackParam);
 
-            // Re-use the logic in getStarterPackHandler
-            $starterPackResponse = $this->getStarterPackHandler($mockRequest);
+            $starterPackResponse = $this->getStarterPackHandler($mockRequest) ?? null;
+
+            if (empty($starterPackResponse)) {
+                return null;
+            }
 
             if (is_wp_error($starterPackResponse)) {
-                // If there's an error, return it immediately
                 return $starterPackResponse;
             }
             // $starterPackResponse is an array containing "starterPack", e.g.:
@@ -361,11 +392,11 @@ class REST
                     ['status' => 400]
                 );
             }
-            // Now we have the actual list AT-URI
+            // The actual lists AT-URI
             $listParam = $listUri;
         }
 
-        // 2) If we still have no "list" param at this point, bail
+        // II | If we still have no "list" param at this point, bail
         if (!$listParam) {
             return new WP_Error(
                 'missing_list',
