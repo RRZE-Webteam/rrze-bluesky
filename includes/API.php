@@ -93,7 +93,7 @@ class API
         $this->getAccessToken();
 
         if (!$this->token) {
-            throw new \Exception("Unable to acquire access token. Please check credentials.");
+            Helper::debug("No valid access token available.");
             return;
         }
     }
@@ -368,6 +368,11 @@ class API
      */
     public function getAllStarterPackData(string $starterPackUri): ?array
     {
+        if (empty($starterPackUri)) {
+            Helper::debug("No starter pack URI provided.");
+            return null;
+        }
+
         // Use a transient to cache for an hour
         $cacheKey = 'rrze_bluesky_starterpack_all_' . md5($starterPackUri);
         $cached   = get_transient($cacheKey);

@@ -2,7 +2,6 @@
 
 namespace RRZE\Bluesky;
 
-use RRZE\Bluesky\Helper;
 use RRZE\Bluesky\Api;
 
 class Render
@@ -54,7 +53,6 @@ class Render
         'hstart'         => 2
     ]): string
     {
-        // Create an instance so we can call non-static methods.
         $renderer = new self();
 
         $uri             = isset($args['postUrl']) ? trim($args['postUrl']) : '';
@@ -70,7 +68,7 @@ class Render
             return $renderer->renderPublicTimeline($feedData);
         }
 
-        if ($isStarterPack) {
+        if ($isStarterPack && !empty($uri)) {
             $api = $renderer->getApi();
             $listData = $api->getAllStarterPackData($uri);
             return $renderer->renderStarterpackList($listData, $hstart);
@@ -313,7 +311,13 @@ class Render
             return '<p>No post data found.</p>';
         }
 
-        Helper::debug($postData);
+        if ($postData['data']['status'] === 401) {
+            return '<div class="wp-block-rrze-bluesky-bluesky"><p>Data not available</p></div>';
+        }
+
+        if ($postData['data']['status'] === 404) {
+            return '<div class="wp-block-rrze-bluesky-bluesky"><p>Post not found</p></div>';
+        }
 
         // Extract needed fields safely
         $author    = isset($postData['author']) && is_array($postData['author']) ? $postData['author'] : [];

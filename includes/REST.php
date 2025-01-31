@@ -133,7 +133,6 @@ class REST
 
         $token = $api->getAccessToken();
         if (!$token) {
-            Helper::debug('Fehler bei der Authentifizierung.');
             return new WP_Error(
                 'no_token',
                 __('Authentication failed.', 'rrze-bluesky'),
@@ -283,6 +282,16 @@ class REST
         // Automatically convert if it's not already "at://..."
         if (!str_starts_with($starterPackUri, 'at://')) {
             $converted = $this->convertBskyStarterPackLinkToAtUri($starterPackUri);
+            if (empty($converted)) {
+                return new \WP_Error(
+                    'invalid_starterpack_uri',
+                    __(
+                        'Unauthorized to access the requested starter pack.',
+                        'rrze-bluesky'
+                    ),
+                    ['status' => 401]
+                );
+            }
             if (!$converted) {
                 return new \WP_Error(
                     'invalid_starterpack_uri',
@@ -308,12 +317,20 @@ class REST
 
         // Call your $api->getStarterPack() with the newly-converted at:// URI
         try {
-            $starterPackData = $api->getStarterPack($starterPackUri);
+            $starterPackData = $api->getStarterPack($starterPackUri) ?? null;
             if (!$starterPackData) {
                 return new \WP_Error(
                     'starter_pack_not_found',
                     __('No data returned for the given starterPack URI.', 'rrze-bluesky'),
                     ['status' => 404]
+                );
+            }
+
+            if(empty($starterPackData)) {
+                return new \WP_Error(
+                    'no_list_uri',
+                    __('No "list.uri" found in the retrieved starter pack.', 'rrze-bluesky'),
+                    ['status' => 400]
                 );
             }
 
@@ -356,7 +373,11 @@ class REST
             $mockRequest = new WP_REST_Request('GET', '/rrze-bluesky/v1/starter-pack');
             $mockRequest->set_param('starterPack', $starterPackParam);
 
-            $starterPackResponse = $this->getStarterPackHandler($mockRequest);
+            $starterPackResponse = $this->getStarterPackHandler($mockRequest) ?? null;
+
+            if (empty($starterPackResponse)) {
+                return null;
+            }
 
             if (is_wp_error($starterPackResponse)) {
                 return $starterPackResponse;

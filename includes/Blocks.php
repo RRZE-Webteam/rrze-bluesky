@@ -35,9 +35,9 @@ class Blocks
             filemtime(plugin_dir_path(__DIR__) . 'css/rrze-bluesky.css')
         );
 
-        wp_enqueue_style('rrze-bluesky');
-        wp_enqueue_script('rrze-video-front-js');
-        wp_enqueue_style('rrze-video-plyr');
+        // wp_enqueue_style('rrze-bluesky');
+        // wp_enqueue_script('rrze-video-front-js');
+        // wp_enqueue_style('rrze-video-plyr');
     }
 
     /**
