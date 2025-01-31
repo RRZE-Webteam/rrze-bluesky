@@ -81,7 +81,6 @@ function deactivation()
     delete_option('rrze_bluesky_password');
     delete_option('rrze_bluesky_secret_key');
 
-    //remove transient
     delete_transient('rrze_bluesky_refresh_token');
     delete_transient('rrze_bluesky_access_token');
 }
