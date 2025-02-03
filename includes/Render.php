@@ -91,22 +91,42 @@ class Render
      */
     public function retrievePostInformation($uri)
     {
-        $response = wp_remote_get(
-            home_url('wp-json/rrze-bluesky/v1/post?uri=' . urlencode($uri)),
-            [
-                'headers' => [
-                    'X-RRZE-Secret-Key' => get_option('rrze_bluesky_secret_key'),
-                ],
-            ]
-        );
+        $api = $this->getApi();
 
-        if (is_wp_error($response)) {
-            return null;
+        if (!$uri) {
+            Helper::debug('No URI provided for post retrieval.');
         }
-        $body = wp_remote_retrieve_body($response);
-        $decoded = json_decode($body, true);
 
-        return $decoded;
+        $cache_key = 'rrze_bluesky_post_' . md5($uri);
+        $cached_post = get_transient($cache_key);
+
+        if ($cached_post !== false) {
+            return $cached_post;
+        }
+
+        $token = $api->getAccessToken();
+        if (!$token) {
+            Helper::debug('No access token available for post retrieval.');
+        }
+
+        if (!str_starts_with($uri, 'at://')) {
+            $rest = new REST();
+            $converted = $rest->convertBskyLinkToAtUri($uri);
+            if (!$converted) {
+                Helper::debug('Failed to convert Bluesky link to AT URI.');
+            }
+            $uri = $converted;
+        }
+
+        $post = $api->getPosts($uri);
+
+        if (!$post) {
+            Helper::debug('Failed to retrieve post data.');
+        }
+
+        set_transient($cache_key, $post, HOUR_IN_SECONDS);
+
+        return $post;
     }
 
     /**
