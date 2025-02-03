@@ -245,32 +245,11 @@ class Settings
 
         unset($_POST['rrze_bluesky_username']);
         unset($_POST['rrze_bluesky_password']);
-
-        $this->deleteTransients();
         
         add_action('admin_notices', function () {
             echo '<div class="notice notice-success is-dismissible"><p>'
                 . esc_html__('Bluesky credentials reset successfully.', 'rrze-bluesky')
                 . '</p></div>';
         });
-    }
-
-    private function deleteTransients()
-    {
-        global $wpdb;
-        $like_pattern    = $wpdb->esc_like('_transient_rrze_bluesky_') . '%';
-        $timeout_pattern = $wpdb->esc_like('_transient_timeout_rrze_bluesky_') . '%';
-
-        $transient_names = $wpdb->get_col("
-            SELECT option_name
-            FROM $wpdb->options
-            WHERE option_name LIKE '$like_pattern'
-            OR option_name LIKE '$timeout_pattern'
-        ");
-
-        foreach ($transient_names as $option_name) {
-            $transient = str_replace('_transient_', '', $option_name);
-            delete_transient($transient);
-        }
     }
 }
