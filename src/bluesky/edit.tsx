@@ -71,15 +71,15 @@ export default function Edit({ attributes, setAttributes }: BskyBlock) {
       }`}
     >
       <InspectorControls>
-        <PanelBody title={__("Post Settings", "bluesky")}>
+        <PanelBody title={__("Post Settings", "rrze-bluesky")}>
           <InputControl
-            label={__("Post or StarterPack URL", "bluesky")}
+            label={__("Post or StarterPack URL", "rrze-bluesky")}
             value={postUrl}
             onChange={onChangeUrl}
           />
         </PanelBody>
         {isStarterPack && (
-          <PanelBody title={__("StarterPack Settings", "bluesky")}>
+          <PanelBody title={__("StarterPack Settings", "rrze-bluesky")}>
             <HeadingSelectorInspector
               attributes={{ hstart: attributes.hstart }}
               setAttributes={(newAttributes) => setAttributes(newAttributes)}
@@ -87,35 +87,42 @@ export default function Edit({ attributes, setAttributes }: BskyBlock) {
           </PanelBody>
         )}
       </InspectorControls>
-      <BlockControls>
-        <ToolbarGroup>
-          <ToolbarItem>
-            {() => (
-              <HeadingSelector
-                attributes={{ hstart: attributes.hstart }}
-                setAttributes={(newAttributes) => setAttributes(newAttributes)}
-              />
-            )}
-          </ToolbarItem>
-        </ToolbarGroup>
-        {urlType === "post" && (
-          <WidthLimiterBar
-            attributes={attributes}
-            setAttributes={(newAttributes) => setAttributes(newAttributes)}
-          />
-        )}
-      </BlockControls>
+      {postUrl !== "" && urlType !== "unknown" && (
+        <BlockControls>
+          <ToolbarGroup>
+            <ToolbarItem>
+              {() => (
+                <HeadingSelector
+                  attributes={{ hstart: attributes.hstart }}
+                  setAttributes={(newAttributes) =>
+                    setAttributes(newAttributes)
+                  }
+                />
+              )}
+            </ToolbarItem>
+          </ToolbarGroup>
+          {urlType === "post" && (
+            <WidthLimiterBar
+              attributes={attributes}
+              setAttributes={(newAttributes) => setAttributes(newAttributes)}
+            />
+          )}
+        </BlockControls>
+      )}
       {(postUrl === "" || urlType === "unknown") && (
         <Placeholder
           icon="admin-post"
-          label={__("Bluesky Embed", "bluesky")}
+          label={__("Bluesky Embed", "rrze-bluesky")}
           instructions={__(
             "Enter a valid Post or StarterPack URL to display content.",
-            "bluesky",
+            "rrze-bluesky",
           )}
         >
           <InputControl
-            label={__("Post or StarterPack URL", "bluesky")}
+            label={__(
+              "Bluesky Post or Bluesky StarterPack URL",
+              "rrze-bluesky",
+            )}
             value={postUrl}
             onChange={onChangeUrl}
           />
@@ -125,11 +132,11 @@ export default function Edit({ attributes, setAttributes }: BskyBlock) {
       {urlType === "starterPack" && (
         <StarterPackList listUri={postUrl} hstart={attributes.hstart} />
       )}
-      {urlType === "unknown" && (
+      {urlType === "unknown" && postUrl !== "" && (
         <Notice status="error" isDismissible={false}>
           {__(
             "Invalid URL. Please enter a valid Post or StarterPack URL.",
-            "bluesky",
+            "rrze-bluesky",
           )}
         </Notice>
       )}

@@ -141,7 +141,6 @@ export default function Post({ uri, hstart }: PostProps) {
 
     apiFetch({ path })
       .then((response: BskyPost) => {
-        console.log(response);
         setPostData(response);
       })
       .catch((err: Error) => {

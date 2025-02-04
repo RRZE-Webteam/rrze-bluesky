@@ -61,7 +61,10 @@ const WidthLimiterBar = ({
             icon={
               widthLimiter ? ActiveWidthLimiterIcon : inactiveWidthLimiterIcon
             }
-            label={__("Display options for the Editor", "rrze-elements-bluesky")}
+            label={__(
+              "Display options for the Editor",
+              "rrze-elements-bluesky",
+            )}
             controls={[
               {
                 title: __(
