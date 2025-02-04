@@ -1,11 +1,10 @@
-// Post.tsx
 import { useEffect, useState } from "@wordpress/element";
 import apiFetch from "@wordpress/api-fetch";
 import { __ } from "@wordpress/i18n";
+import HeadingComponent from "./HeadingComponent";
 import { RRZEVidstackPlayer as Vidstack } from "./Vidstack";
 import { Notice } from "@wordpress/components";
 
-// You can reuse these interfaces or import them if you have them in a shared file
 export interface BskyPost {
   uri: string;
   cid: string;
@@ -117,6 +116,7 @@ function getDomainFromUrl(url: string): string {
 
 interface PostProps {
   uri: string;
+  hstart?: number;
 }
 
 interface Error {
@@ -127,7 +127,7 @@ interface Error {
   };
 }
 
-export default function Post({ uri }: PostProps) {
+export default function Post({ uri, hstart }: PostProps) {
   const [postData, setPostData] = useState<BskyPost | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -141,7 +141,6 @@ export default function Post({ uri }: PostProps) {
 
     apiFetch({ path })
       .then((response: BskyPost) => {
-        console.log(response);
         setPostData(response);
       })
       .catch((err: Error) => {
@@ -172,9 +171,7 @@ export default function Post({ uri }: PostProps) {
           </Notice>
           <Notice status="info" isDismissible={false}>
             <>
-              <h2 style={{ fontSize: "2rem" }}>
-                {__("How to login and connect to the Bsky API", "rrze-bluesky")}
-              </h2>
+            <HeadingComponent style={{ fontSize: "2rem" }} level={hstart}>{__("How to login and connect to the Bsky API", "rrze-bluesky")}</HeadingComponent>
               <ol>
                 <li>
                   <a

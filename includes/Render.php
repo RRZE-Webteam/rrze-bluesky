@@ -50,17 +50,19 @@ class Render
         'limit'          => 10,
         'isPost'         => false,
         'isStarterPack'  => false,
-        'hstart'         => 2
+        'hstart'         => 2,
+        "widthLimiter"     => true,
     ]): string
     {
         $renderer = new self();
 
-        $uri             = isset($args['postUrl']) ? trim($args['postUrl']) : '';
-        $limit           = isset($args['limit']) ? (int) $args['limit'] : 10;
-        $isPost          = isset($args['isPost']) ? (bool) $args['isPost'] : false;
-        $isStarterPack   = isset($args['isStarterPack']) ? (bool) $args['isStarterPack'] : false;
-        $isPublicTimeline = !empty($args['publicTimeline']);
-        $hstart          = isset($args['hstart']) ? (int) $args['hstart'] : 2;
+        $uri                = isset($args['postUrl']) ? trim($args['postUrl']) : '';
+        $limit              = isset($args['limit']) ? (int) $args['limit'] : 10;
+        $isPost             = isset($args['isPost']) ? (bool) $args['isPost'] : false;
+        $isStarterPack      = isset($args['isStarterPack']) ? (bool) $args['isStarterPack'] : false;
+        $isPublicTimeline   = !empty($args['publicTimeline']);
+        $hstart             = isset($args['hstart']) ? (int) $args['hstart'] : 2;
+        $limitWidth         = isset($args['widthLimiter']) ? (bool) $args['widthLimiter'] : true;
 
         // If publicTimeline is set, show timeline
         if ($isPublicTimeline) {
@@ -77,7 +79,7 @@ class Render
         // Otherwise, if we have a valid post URI, show the single post
         if (!empty($uri)) {
             $postData = $renderer->retrievePostInformation($uri);
-            return $renderer->renderPost($postData);
+            return $renderer->renderPost($postData, false, $hstart, $limitWidth);
         }
 
         // Fallback if neither condition is met
@@ -132,7 +134,7 @@ class Render
     /**
      * Render Post Header
      */
-    public function renderPostHeader($handle, $displayName, $avatar)
+    public function renderPostHeader($handle, $displayName, $avatar, $hstart = 3)
     {
         $html  = '  <header>';
         $html .= '    <div class="author-information">';
@@ -140,7 +142,7 @@ class Render
         $html .= '        <img src="' . esc_url($avatar) . '" alt="' . esc_attr($displayName) . '" />';
         $html .= '      </a>';
         $html .= '      <div class="author-name">';
-        $html .= '        <h3><a href="' . esc_url($this->getProfileUrl($handle)) . '">' . esc_html($displayName) . '</a></h3>';
+        $html .= '        <h' . (int)$hstart . '><a href="' . esc_url($this->getProfileUrl($handle)) . '">' . esc_html($displayName) . '</a></h' . (int)$hstart . '>';
         $html .= '        <p><a href="' . esc_url($this->getProfileUrl($handle)) . '">@' . esc_html($handle) . '</a></p>';
         $html .= '      </div>';
         $html .= '    </div>';
@@ -325,46 +327,45 @@ class Render
      * @param array|null $postData The post data array.
      * @return string Generated HTML string.
      */
-    public function renderPost($postData, $hideFooter = false)
+    public function renderPost($postData, $hideFooter = false, $hstart = 3, $limitWidth = true)
     {
         if (!$postData || !is_array($postData)) {
             return '<p>No post data found.</p>';
         }
 
-        if ($postData['data']['status'] === 401) {
+        $status = $postData['data']['status'] ?? null;
+        if ($status === 401) {
             return '<div class="wp-block-rrze-bluesky-bluesky"><p>Data not available</p></div>';
         }
-
-        if ($postData['data']['status'] === 404) {
+        if ($status === 404) {
             return '<div class="wp-block-rrze-bluesky-bluesky"><p>Post not found</p></div>';
         }
 
-        // Extract needed fields safely
+       // Extract needed fields safely.
         $author    = isset($postData['author']) && is_array($postData['author']) ? $postData['author'] : [];
         $record    = isset($postData['record']) && is_array($postData['record']) ? $postData['record'] : [];
         $embed     = isset($postData['embed'])  && is_array($postData['embed'])  ? $postData['embed']  : [];
-        $uri       = isset($postData['uri']) ? $postData['uri'] : '';
-        $likeCount = isset($postData['likeCount']) ? (int)$postData['likeCount'] : 0;
-        $replyCount = isset($postData['replyCount']) ? (int)$postData['replyCount'] : 0;
-        $repostCount = isset($postData['repostCount']) ? (int)$postData['repostCount'] : 0;
+        $uri       = $postData['uri'] ?? '';
+        $likeCount = isset($postData['likeCount']) ? (int) $postData['likeCount'] : 0;
+        $replyCount = isset($postData['replyCount']) ? (int) $postData['replyCount'] : 0;
+        $repostCount = isset($postData['repostCount']) ? (int) $postData['repostCount'] : 0;
 
         // Author fields
-        $displayName = isset($author['displayName']) ? $author['displayName'] : '';
-        $handle      = isset($author['handle'])      ? $author['handle']      : '';
-        $avatar      = isset($author['avatar'])      ? $author['avatar']      : '';
-        $createdAt   = isset($author['createdAt'])   ? $author['createdAt']   : '';
+        $displayName = $author['displayName'] ?? '';
+        $handle      = $author['handle']      ?? '';
+        $avatar      = $author['avatar']      ?? '';
+        $createdAt   = $author['createdAt']   ?? '';
 
         // Post text
-        $postText = isset($record['text']) ? $record['text'] : '';
+        $postText = $record['text'] ?? '';
 
         // Check if this is a video embed
-        $isVideoEmbed = (isset($embed['$type']) && $embed['$type'] === 'app.bsky.embed.video#view');
-        // Check if this is an embedded record
-        $isRecordEmbed = (isset($embed['$type']) && $embed['$type'] === 'app.bsky.embed.record#view');
+        $isVideoEmbed  = (isset($embed['$type']) && $embed['$type'] === 'app.bsky.embed.video#view');
+        $isRecordEmbed = (isset($embed['$type']) && $embed['$type'] === 'app.bsky.embed.record#view');    
 
         // Start building HTML
-        $html  = '<div class="wp-block-rrze-bluesky-bluesky"><article class="bsky-post">';
-        $html .= $this->renderPostHeader($handle, $displayName, $avatar);
+        $html = '<div class="wp-block-rrze-bluesky-bluesky' . ($limitWidth ? ' bsky-limit-width' : '') . '"><article class="bsky-post">';
+        $html .= $this->renderPostHeader($handle, $displayName, $avatar, $hstart);
         $html .= $this->renderPostContent($postText, $embed, $isVideoEmbed, $isRecordEmbed);
         $html .= $this->renderPostFooter($hideFooter, $handle, $uri, $createdAt, $likeCount, $repostCount, $replyCount);
 

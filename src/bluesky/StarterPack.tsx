@@ -237,7 +237,6 @@ export default function StarterPack({ uri }: StarterPackProps) {
 
     apiFetch({ path })
       .then((response: IStarterPackRoot) => {
-        console.log(response);
         setPostData(response);
       })
       .catch((err: Error) => {

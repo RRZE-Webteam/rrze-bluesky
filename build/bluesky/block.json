@@ -33,6 +33,10 @@
     "hstart": {
       "type": "number",
       "default": 2
+    },
+    "widthLimiter": {
+      "type": "boolean",
+      "default": true
     }
   },
   "textdomain": "rrze-elements-bluesky",

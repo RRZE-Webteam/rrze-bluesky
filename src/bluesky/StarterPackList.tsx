@@ -41,7 +41,6 @@ export default function StarterPackList({ listUri, hstart }: ListProps) {
 
     const isAtUri = listUri.startsWith("at://");
     const paramName = isAtUri ? "list" : "starterPack";
-    console.log(listUri);
 
     const path = `/rrze-bluesky/v1/list?${paramName}=${encodeURIComponent(
       listUri,
@@ -49,7 +48,6 @@ export default function StarterPackList({ listUri, hstart }: ListProps) {
 
     apiFetch({ path })
       .then((response: IListResponse) => {
-        console.log(response);
         setData(response);
       })
       .catch((err: Error) => {

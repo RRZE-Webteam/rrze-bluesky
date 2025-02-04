@@ -17,6 +17,7 @@ import { sanitizeUrl } from "./utils";
 import Post from "./Post";
 import StarterPackList from "./StarterPackList";
 import { HeadingSelector, HeadingSelectorInspector } from "./HeadingSelector";
+import { WidthLimiterBar } from "./WidthLimiter";
 
 // Helper function to determine URL type
 const getUrlType = (url: string): "post" | "starterPack" | "unknown" => {
@@ -36,6 +37,7 @@ interface BskyBlock {
     isPost: boolean;
     isStarterPack: boolean;
     hstart: number;
+    widthLimiter: boolean;
   };
   setAttributes: (attributes: {
     postUrl?: string;
@@ -43,11 +45,12 @@ interface BskyBlock {
     isPost?: boolean;
     isStarterPack?: boolean;
     hstart?: number;
+    widthLimiter?: boolean;
   }) => void;
 }
 
 export default function Edit({ attributes, setAttributes }: BskyBlock) {
-  const { postUrl, isStarterPack } = attributes;
+  const { postUrl, isStarterPack, widthLimiter } = attributes;
   const blockProps = useBlockProps();
   let urlType = getUrlType(postUrl);
 
@@ -61,17 +64,22 @@ export default function Edit({ attributes, setAttributes }: BskyBlock) {
   };
 
   return (
-    <div {...blockProps}>
+    <div
+      {...blockProps}
+      className={`${blockProps.className}${
+        widthLimiter ? " bsky-width-limiter" : ""
+      }`}
+    >
       <InspectorControls>
-        <PanelBody title={__("Post Settings", "bluesky")}>
+        <PanelBody title={__("Post Settings", "rrze-bluesky")}>
           <InputControl
-            label={__("Post or StarterPack URL", "bluesky")}
+            label={__("Post or StarterPack URL", "rrze-bluesky")}
             value={postUrl}
             onChange={onChangeUrl}
           />
         </PanelBody>
         {isStarterPack && (
-          <PanelBody title={__("StarterPack Settings", "bluesky")}>
+          <PanelBody title={__("StarterPack Settings", "rrze-bluesky")}>
             <HeadingSelectorInspector
               attributes={{ hstart: attributes.hstart }}
               setAttributes={(newAttributes) => setAttributes(newAttributes)}
@@ -79,7 +87,7 @@ export default function Edit({ attributes, setAttributes }: BskyBlock) {
           </PanelBody>
         )}
       </InspectorControls>
-      {isStarterPack && (
+      {postUrl !== "" && urlType !== "unknown" && (
         <BlockControls>
           <ToolbarGroup>
             <ToolbarItem>
@@ -93,33 +101,42 @@ export default function Edit({ attributes, setAttributes }: BskyBlock) {
               )}
             </ToolbarItem>
           </ToolbarGroup>
+          {urlType === "post" && (
+            <WidthLimiterBar
+              attributes={attributes}
+              setAttributes={(newAttributes) => setAttributes(newAttributes)}
+            />
+          )}
         </BlockControls>
       )}
       {(postUrl === "" || urlType === "unknown") && (
         <Placeholder
           icon="admin-post"
-          label={__("Bluesky Embed", "bluesky")}
+          label={__("Bluesky Embed", "rrze-bluesky")}
           instructions={__(
             "Enter a valid Post or StarterPack URL to display content.",
-            "bluesky",
+            "rrze-bluesky",
           )}
         >
           <InputControl
-            label={__("Post or StarterPack URL", "bluesky")}
+            label={__(
+              "Bluesky Post or Bluesky StarterPack URL",
+              "rrze-bluesky",
+            )}
             value={postUrl}
             onChange={onChangeUrl}
           />
         </Placeholder>
       )}
-      {urlType === "post" && <Post uri={postUrl} />}
+      {urlType === "post" && <Post uri={postUrl} hstart={attributes.hstart} />}
       {urlType === "starterPack" && (
         <StarterPackList listUri={postUrl} hstart={attributes.hstart} />
       )}
-      {urlType === "unknown" && (
+      {urlType === "unknown" && postUrl !== "" && (
         <Notice status="error" isDismissible={false}>
           {__(
             "Invalid URL. Please enter a valid Post or StarterPack URL.",
-            "bluesky",
+            "rrze-bluesky",
           )}
         </Notice>
       )}
