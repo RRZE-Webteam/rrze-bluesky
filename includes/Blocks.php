@@ -12,7 +12,7 @@ class Blocks
     {
         add_action('init', [$this, 'rrze_rrze_bluesky_block_init']);
         add_action( 'wp_enqueue_scripts', [$this, 'rrze_register_style']);
-        add_filter('block_categories', [$this, 'my_custom_block_category'], 10, 2);
+        add_filter('block_categories_all', [$this, 'my_custom_block_category'], 10, 2);
     }
 
     /**

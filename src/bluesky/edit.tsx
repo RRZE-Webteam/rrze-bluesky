@@ -17,6 +17,7 @@ import { sanitizeUrl } from "./utils";
 import Post from "./Post";
 import StarterPackList from "./StarterPackList";
 import { HeadingSelector, HeadingSelectorInspector } from "./HeadingSelector";
+import { WidthLimiterBar } from "./WidthLimiter";
 
 // Helper function to determine URL type
 const getUrlType = (url: string): "post" | "starterPack" | "unknown" => {
@@ -36,6 +37,7 @@ interface BskyBlock {
     isPost: boolean;
     isStarterPack: boolean;
     hstart: number;
+    widthLimiter: boolean;
   };
   setAttributes: (attributes: {
     postUrl?: string;
@@ -43,11 +45,12 @@ interface BskyBlock {
     isPost?: boolean;
     isStarterPack?: boolean;
     hstart?: number;
+    widthLimiter?: boolean;
   }) => void;
 }
 
 export default function Edit({ attributes, setAttributes }: BskyBlock) {
-  const { postUrl, isStarterPack } = attributes;
+  const { postUrl, isStarterPack, widthLimiter } = attributes;
   const blockProps = useBlockProps();
   let urlType = getUrlType(postUrl);
 
@@ -61,7 +64,12 @@ export default function Edit({ attributes, setAttributes }: BskyBlock) {
   };
 
   return (
-    <div {...blockProps}>
+    <div
+      {...blockProps}
+      className={`${blockProps.className}${
+        widthLimiter ? " bsky-width-limiter" : ""
+      }`}
+    >
       <InspectorControls>
         <PanelBody title={__("Post Settings", "bluesky")}>
           <InputControl
@@ -79,22 +87,24 @@ export default function Edit({ attributes, setAttributes }: BskyBlock) {
           </PanelBody>
         )}
       </InspectorControls>
-      {isStarterPack && (
-        <BlockControls>
-          <ToolbarGroup>
-            <ToolbarItem>
-              {() => (
-                <HeadingSelector
-                  attributes={{ hstart: attributes.hstart }}
-                  setAttributes={(newAttributes) =>
-                    setAttributes(newAttributes)
-                  }
-                />
-              )}
-            </ToolbarItem>
-          </ToolbarGroup>
-        </BlockControls>
-      )}
+      <BlockControls>
+        <ToolbarGroup>
+          <ToolbarItem>
+            {() => (
+              <HeadingSelector
+                attributes={{ hstart: attributes.hstart }}
+                setAttributes={(newAttributes) => setAttributes(newAttributes)}
+              />
+            )}
+          </ToolbarItem>
+        </ToolbarGroup>
+        {urlType === "post" && (
+          <WidthLimiterBar
+            attributes={attributes}
+            setAttributes={(newAttributes) => setAttributes(newAttributes)}
+          />
+        )}
+      </BlockControls>
       {(postUrl === "" || urlType === "unknown") && (
         <Placeholder
           icon="admin-post"
@@ -111,7 +121,7 @@ export default function Edit({ attributes, setAttributes }: BskyBlock) {
           />
         </Placeholder>
       )}
-      {urlType === "post" && <Post uri={postUrl} />}
+      {urlType === "post" && <Post uri={postUrl} hstart={attributes.hstart} />}
       {urlType === "starterPack" && (
         <StarterPackList listUri={postUrl} hstart={attributes.hstart} />
       )}

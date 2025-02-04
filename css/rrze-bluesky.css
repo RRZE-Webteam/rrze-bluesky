@@ -1,3 +1,18 @@
+.wp-block-rrze-bluesky-bluesky.bsky-limit-width {
+  max-width: 75ch;
+}
+.wp-block-rrze-bluesky-bluesky li.bsky-starterpack-list-item {
+  list-style: none;
+}
+.wp-block-rrze-bluesky-bluesky li.bsky-starterpack-list-item .bsky-profile {
+  padding-bottom: 1rem;
+}
+.wp-block-rrze-bluesky-bluesky li.bsky-starterpack-list-item p {
+  max-width: 75ch;
+}
+.wp-block-rrze-bluesky-bluesky li.bsky-starterpack-list-item a.bsky-follow-button svg {
+  width: initial;
+}
 .wp-block-rrze-bluesky-bluesky .bsky-embed-caption {
   border: 1px solid #bdbdbd;
   border-radius: 0 0 8px 8px;
@@ -39,6 +54,7 @@
 .wp-block-rrze-bluesky-bluesky header {
   display: flex;
   justify-content: space-between;
+  padding-bottom: 1rem;
 }
 .wp-block-rrze-bluesky-bluesky .bsky-post {
   padding: 1rem;
@@ -52,8 +68,8 @@
   align-items: center;
 }
 .wp-block-rrze-bluesky-bluesky .author-information img {
-  width: 40px;
-  height: 40px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
 }
 .wp-block-rrze-bluesky-bluesky .author-name {
@@ -65,15 +81,27 @@
   font-size: 0.9rem;
   color: #222;
 }
-.wp-block-rrze-bluesky-bluesky .author-name h3 {
+.wp-block-rrze-bluesky-bluesky .author-name h3,
+.wp-block-rrze-bluesky-bluesky .author-name h4,
+.wp-block-rrze-bluesky-bluesky .author-name h5,
+.wp-block-rrze-bluesky-bluesky .author-name h6,
+.wp-block-rrze-bluesky-bluesky .author-name h2 {
   margin-top: 0;
   margin-bottom: 0;
   font-size: 1.2rem;
   font-weight: 700;
   color: #222;
+  padding-bottom: 0.1rem;
 }
 .wp-block-rrze-bluesky-bluesky .author-name a {
   color: #222;
+}
+.wp-block-rrze-bluesky-bluesky hr {
+  color: initial;
+  height: 1px;
+  background-color: #666;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 .wp-block-rrze-bluesky-bluesky .publication-time {
   font-size: 0.9rem;
