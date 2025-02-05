@@ -8,7 +8,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2025-02-04T13:33:36+00:00\n"
-"PO-Revision-Date: 2025-02-04 14:21+0000\n"
+"PO-Revision-Date: 2025-02-05 16:52+0000\n"
 "Language: de_DE\n"
 "X-Generator: Loco https://localise.biz/\n"
 "X-Domain: rrze-bluesky\n"
@@ -20,9 +20,25 @@ msgstr ""
 msgid "A WordPress Plugin to embed information and posts from Bluesky on your website."
 msgstr "Ein WordPress Plugin zur Einbindung von Beiträgen und StarterPacks aus Bluesky auf deiner Website."
 
+#: includes/Render.php:123
+msgid "Authentication error: No access token available."
+msgstr "Fehler bei der Authentifizierung: Kein Accesstoken verfügbar"
+
 #: includes/REST.php:138
 msgid "Authentication failed."
 msgstr "Authentifizierung fehlgeschlagen."
+
+#: build/bluesky/block.json
+#: src/bluesky/block.json
+msgctxt "block description"
+msgid "Block for embedding content from Bluesky."
+msgstr "Block zur Einbettung von Inhalten aus Bluesky."
+
+#: build/bluesky/block.json
+#: src/bluesky/block.json
+msgctxt "block title"
+msgid "Bluesky"
+msgstr "Bluesky"
 
 #: includes/Settings.php:159
 msgid "Bluesky Credentials"
@@ -42,7 +58,7 @@ msgstr "Bluesky Benutzername"
 
 #: includes/Render.php:77
 #: includes/Render.php:105
-#: includes/Render.php:661
+#: includes/Render.php:666
 msgid "Configuration error: API not available."
 msgstr "Konfigurationsfehler: Die Schnittstelle ist aktuell nicht verfügbar."
 
@@ -58,7 +74,11 @@ msgstr "Gebe deinen Bluesky handle (Benutzernamen) und Passwort zur authentifizi
 msgid "Error fetching profile:"
 msgstr "Fehler beim Abruf des Profils:"
 
-#: includes/Render.php:605
+#: includes/Render.php:141
+msgid "Failed to retrieve post data."
+msgstr "Datenabruf für den Bsky Post fehlgeschlagen."
+
+#: includes/Render.php:610
 #: build/bluesky/index.js:1
 msgid "Follow"
 msgstr "Folgen"
@@ -72,6 +92,10 @@ msgstr "https://blogs.fau.de/webworking/"
 #: rrze-bluesky.php
 msgid "https://www.github.com/rrze-webteam/rrze-bluesky"
 msgstr "https://www.github.com/rrze-webteam/rrze-bluesky"
+
+#: includes/Render.php:132
+msgid "Invalid Bluesky URI provided."
+msgstr "Ungültige Bluesky-URL eingegeben."
 
 #: includes/REST.php:390
 msgid "No \"list\" parameter provided. Provide either ?list=... or ?starterPack=...."
@@ -98,13 +122,17 @@ msgstr "Für die eingetragene StarterPack URI konnten keine Daten abgerufen werd
 msgid "No list data returned for the given AT-URI."
 msgstr "Keine Listendaten für die gegebene AT-URI gefunden."
 
-#: includes/Render.php:343
+#: includes/Render.php:348
 msgid "No Post data found."
 msgstr "Kein Beitrag gefunden."
 
 #: includes/REST.php:160
 msgid "No post found for the given URI."
 msgstr "Es wurde kein Beitrag für die angegebene URL gefunden."
+
+#: includes/Render.php:110
+msgid "No URI provided for post retrieval."
+msgstr "Keine URL für den Datenabruf bereitgestellt."
 
 #. translators: 1: The plugin name, 2: The error string.
 #: rrze-bluesky.php:119
@@ -119,17 +147,17 @@ msgstr "Der angegebene Parameter ist weder eine gültige at:// URI, noch ein gü
 msgid "Provided URI is neither a valid at:// URI nor a valid bsky.app link."
 msgstr "Angegebene URI ist weder eine gültige at:// URI, noch ein gültiger bsky.app Link."
 
-#: includes/Render.php:320
+#: includes/Render.php:325
 #: build/bluesky/index.js:1
 msgid "Read"
 msgstr "Lese"
 
-#: includes/Render.php:322
+#: includes/Render.php:327
 #: build/bluesky/index.js:1
 msgid "Read on Bluesky"
 msgstr "Auf Bluesky lesen"
 
-#: includes/Render.php:320
+#: includes/Render.php:325
 #: build/bluesky/index.js:1
 msgid "replies on Bluesky"
 msgstr "Antworten auf Bluesky"
@@ -138,7 +166,7 @@ msgstr "Antworten auf Bluesky"
 msgid "Reset Credentials"
 msgstr "Anmeldedaten zurücksetzen"
 
-#: includes/Blocks.php:86
+#: includes/Blocks.php:75
 msgid "RRZE"
 msgstr "RRZE"
 
@@ -172,7 +200,7 @@ msgstr "Auf dem Server läuft PHP-Version %1$s. Das Plugin benötigt mindestens 
 msgid "The server is running WordPress version %1$s. The Plugin requires at least WordPress version %2$s."
 msgstr "Auf dem Server läuft WordPress Version %1$s. Das Plugin benötigt mindestens WordPress Version %2$s."
 
-#: includes/Render.php:282
+#: includes/Render.php:287
 #: build/bluesky/index.js:1
 msgid "um"
 msgstr "um"

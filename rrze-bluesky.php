@@ -46,7 +46,6 @@ spl_autoload_register(function ($class) {
 register_deactivation_hook(__FILE__, __NAMESPACE__ . '\deactivation');
 
 add_action('plugins_loaded', __NAMESPACE__ . '\loaded');
-add_action('plugins_loaded', __NAMESPACE__ . '\loadTextDomain');
 
 /**
  * System requirements verification.
@@ -71,14 +70,6 @@ function systemRequirements(): string
         );
     }
     return $error;
-}
-
-/**
- * Translation
- */
-function loadTextDomain()
- {
-    load_plugin_textdomain('rrze-bluesky', false, dirname(plugin_basename(__FILE__)) . '/languages');
 }
 
 /**
