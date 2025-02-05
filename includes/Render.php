@@ -74,7 +74,7 @@ class Render
             $api = $renderer->getApi();
             if (!$api) {
                 Helper::debug('API object not available. Please check your credentials.');
-                return '<p>'.__("Configuration error: API not available.","rrze-bluesky").'</p>';
+                return '<p>' . __("Configuration error: API not available.", "rrze-bluesky") . '</p>';
             }
             $listData = $api->getAllStarterPackData($uri);
             return $renderer->renderStarterpackList($listData, $hstart);
@@ -93,7 +93,7 @@ class Render
     /**
      * Fetch data for a single Bluesky post (placeholder implementation).
      * @param string $uri The Bluesky post URI.
-     * @return array|null Post data array or null if failed.
+     * @return array|string Post data array or error message.
      */
     public function retrievePostInformation($uri)
     {
@@ -102,11 +102,12 @@ class Render
         // Check if API is available
         if (!$api) {
             Helper::debug('API object not available. Please check your credentials.');
-            return '<p>'.__("Configuration error: API not available.","rrze-bluesky").'</p>';
+            return '<p>' . __("Configuration error: API not available.", "rrze-bluesky") . '</p>';
         }
 
         if (!$uri) {
             Helper::debug('No URI provided for post retrieval.');
+            return '<p>' . __("No URI provided for post retrieval.", "rrze-bluesky") . '</p>';
         }
 
         $cache_key = 'rrze_bluesky_post_' . md5($uri);
@@ -119,13 +120,16 @@ class Render
         $token = $api->getAccessToken();
         if (!$token) {
             Helper::debug('No access token available for post retrieval.');
+            return '<p>' . __("Authentication error: No access token available.", "rrze-bluesky") . '</p>';
         }
 
+        // Convert Bluesky URL to AT URI if needed.
         if (!str_starts_with($uri, 'at://')) {
             $rest = new REST();
             $converted = $rest->convertBskyLinkToAtUri($uri);
             if (!$converted) {
                 Helper::debug('Failed to convert Bluesky link to AT URI.');
+                return '<p>' . __("Invalid Bluesky URI provided.", "rrze-bluesky") . '</p>';
             }
             $uri = $converted;
         }
@@ -134,12 +138,13 @@ class Render
 
         if (!$post) {
             Helper::debug('Failed to retrieve post data.');
+            return '<p>' . __("Failed to retrieve post data.", "rrze-bluesky") . '</p>';
         }
 
         set_transient($cache_key, $post, HOUR_IN_SECONDS);
-
         return $post;
     }
+
 
     /**
      * Render Post Header
@@ -340,7 +345,7 @@ class Render
     public function renderPost($postData, $hideFooter = false, $hstart = 3, $limitWidth = true)
     {
         if (!$postData || !is_array($postData)) {
-            return '<p>'.__("No Post data found.","rrze-bluesky").'</p>';
+            return '<p>' . __("No Post data found.", "rrze-bluesky") . '</p>';
         }
 
         $status = $postData['data']['status'] ?? null;
@@ -658,7 +663,7 @@ class Render
         $api = $renderer->getApi();
         if (!$api) {
             Helper::debug('API object not available. Please check your credentials.');
-            return '<p>'.__("Configuration error: API not available.","rrze-bluesky").'</p>';
+            return '<p>' . __("Configuration error: API not available.", "rrze-bluesky") . '</p>';
         }
 
         $profileData = $api->getProfile(['actor' => $bskyHandle]);
