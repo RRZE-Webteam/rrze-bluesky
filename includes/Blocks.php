@@ -11,7 +11,7 @@ class Blocks
     public function __construct()
     {
         add_action('init', [$this, 'rrze_rrze_bluesky_block_init']);
-        add_action( 'wp_enqueue_scripts', [$this, 'rrze_register_style']);
+        add_action('wp_enqueue_scripts', [$this, 'rrze_register_style']);
         add_filter('block_categories_all', [$this, 'my_custom_block_category'], 10, 2);
     }
 
@@ -34,10 +34,6 @@ class Blocks
             [],
             filemtime(plugin_dir_path(__DIR__) . 'css/rrze-bluesky.css')
         );
-
-        // wp_enqueue_style('rrze-bluesky');
-        // wp_enqueue_script('rrze-video-front-js');
-        // wp_enqueue_style('rrze-video-plyr');
     }
 
     /**
@@ -45,23 +41,12 @@ class Blocks
      */
     private function rrze_register_blocks_and_translations()
     {
-        $blocks = [
-            'bluesky',
-        ];
+        register_block_type(plugin_dir_path(__DIR__) . 'build/bluesky', [
+            'render_callback' => [Render::class, 'renderBlock'],
+        ]);
 
-        foreach ($blocks as $block) {
-            register_block_type(plugin_dir_path(__DIR__) . 'build/' . $block, [
-                'render_callback' => [Render::class, 'renderBlock'],
-            ]);
-
-            load_plugin_textdomain('rrze-bluesky', false, dirname(plugin_basename(__DIR__)) . 'languages');
-
-            $script_handle = generate_block_asset_handle('rrze-bluesky/' . $block, 'editorScript');
-            wp_set_script_translations($script_handle, 'rrze-bluesky', plugin_dir_path(__DIR__) . 'languages');
-        }
-
-        // Register global styles and scripts here.
-        // wp_enqueue_style('rrze-bluesky');
+        $script_handle = generate_block_asset_handle('rrze-bluesky/bluesky', 'editorScript');
+        wp_set_script_translations($script_handle, 'rrze-bluesky', plugin_dir_path(__DIR__) . 'languages');
     }
 
     /**

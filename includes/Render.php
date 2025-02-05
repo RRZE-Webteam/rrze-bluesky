@@ -72,6 +72,10 @@ class Render
 
         if ($isStarterPack && !empty($uri)) {
             $api = $renderer->getApi();
+            if (!$api) {
+                Helper::debug('API object not available. Please check your credentials.');
+                return '<p>'.__("Configuration error: API not available.","rrze-bluesky").'</p>';
+            }
             $listData = $api->getAllStarterPackData($uri);
             return $renderer->renderStarterpackList($listData, $hstart);
         }
@@ -94,6 +98,12 @@ class Render
     public function retrievePostInformation($uri)
     {
         $api = $this->getApi();
+
+        // Check if API is available
+        if (!$api) {
+            Helper::debug('API object not available. Please check your credentials.');
+            return '<p>'.__("Configuration error: API not available.","rrze-bluesky").'</p>';
+        }
 
         if (!$uri) {
             Helper::debug('No URI provided for post retrieval.');
@@ -307,9 +317,9 @@ class Render
             $html .= '      <div class="bsky-reply">';
             $html .= '        <a href="' . esc_url($this->getPostUrl($handle, $uri)) . '" class="bsky-reply-count">';
             if ($replyCount > 0) {
-                $html .= '          ' . esc_html__('Read', 'rrze-bluesky') . ' ' . (int)$replyCount . ' ' . esc_html__('replies on Bluesky', 'rrze-bluesky');
+                $html .= '          ' . __('Read', 'rrze-bluesky') . ' ' . (int)$replyCount . ' ' . __('replies on Bluesky', 'rrze-bluesky');
             } else {
-                $html .= '          ' . esc_html__('Read on Bluesky', 'rrze-bluesky');
+                $html .= '          ' . __('Read on Bluesky', 'rrze-bluesky');
             }
             $html .= '        </a>';
             $html .= '      </div>';
@@ -330,7 +340,7 @@ class Render
     public function renderPost($postData, $hideFooter = false, $hstart = 3, $limitWidth = true)
     {
         if (!$postData || !is_array($postData)) {
-            return '<p>No post data found.</p>';
+            return '<p>'.__("No Post data found.","rrze-bluesky").'</p>';
         }
 
         $status = $postData['data']['status'] ?? null;
@@ -341,7 +351,7 @@ class Render
             return '<div class="wp-block-rrze-bluesky-bluesky"><p>Post not found</p></div>';
         }
 
-       // Extract needed fields safely.
+        // Extract needed fields safely.
         $author    = isset($postData['author']) && is_array($postData['author']) ? $postData['author'] : [];
         $record    = isset($postData['record']) && is_array($postData['record']) ? $postData['record'] : [];
         $embed     = isset($postData['embed'])  && is_array($postData['embed'])  ? $postData['embed']  : [];
@@ -361,7 +371,7 @@ class Render
 
         // Check if this is a video embed
         $isVideoEmbed  = (isset($embed['$type']) && $embed['$type'] === 'app.bsky.embed.video#view');
-        $isRecordEmbed = (isset($embed['$type']) && $embed['$type'] === 'app.bsky.embed.record#view');    
+        $isRecordEmbed = (isset($embed['$type']) && $embed['$type'] === 'app.bsky.embed.record#view');
 
         // Start building HTML
         $html = '<div class="wp-block-rrze-bluesky-bluesky' . ($limitWidth ? ' bsky-limit-width' : '') . '"><article class="bsky-post">';
@@ -647,7 +657,8 @@ class Render
 
         $api = $renderer->getApi();
         if (!$api) {
-            return '<p>No API object available.</p>';
+            Helper::debug('API object not available. Please check your credentials.');
+            return '<p>'.__("Configuration error: API not available.","rrze-bluesky").'</p>';
         }
 
         $profileData = $api->getProfile(['actor' => $bskyHandle]);
