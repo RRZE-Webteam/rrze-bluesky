@@ -52,7 +52,6 @@ const WidthLimiterBar = ({
     setAttributes({ widthLimiter: newWidthLimiter });
   };
 
-  // Return the main component
   return (
     <ToolbarGroup>
       <ToolbarItem>

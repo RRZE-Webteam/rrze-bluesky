@@ -1,0 +1,182 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: RRZE Bluesky 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/rrze-bluesky\n"
+"Last-Translator: \n"
+"Language-Team: Deutsch\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2025-02-04T13:33:36+00:00\n"
+"PO-Revision-Date: 2025-02-04 14:21+0000\n"
+"Language: de_DE\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Domain: rrze-bluesky\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Loco-Version: 2.7.1; wp-6.7.1\n"
+
+#. Description of the plugin
+#: rrze-bluesky.php
+msgid "A WordPress Plugin to embed information and posts from Bluesky on your website."
+msgstr "Ein WordPress Plugin zur Einbindung von Beiträgen und StarterPacks aus Bluesky auf deiner Website."
+
+#: includes/REST.php:138
+msgid "Authentication failed."
+msgstr "Authentifizierung fehlgeschlagen."
+
+#: includes/Settings.php:159
+msgid "Bluesky Credentials"
+msgstr "Bluesky Login-Daten"
+
+#: includes/Settings.php:251
+msgid "Bluesky credentials reset successfully."
+msgstr "Bluesky Login-Daten erfolgreich zurückgesetzt."
+
+#: includes/Settings.php:174
+msgid "Bluesky Password"
+msgstr "Bluesky Passwort"
+
+#: includes/Settings.php:166
+msgid "Bluesky Username"
+msgstr "Bluesky Benutzername"
+
+#: includes/Render.php:77
+#: includes/Render.php:105
+#: includes/Render.php:661
+msgid "Configuration error: API not available."
+msgstr "Konfigurationsfehler: Die Schnittstelle ist aktuell nicht verfügbar."
+
+#: includes/Settings.php:101
+msgid "Currently connected Bluesky-User:"
+msgstr "Derzeit verbundener Account:"
+
+#: includes/Settings.php:186
+msgid "Enter your Bluesky handle (username) and password to authenticate."
+msgstr "Gebe deinen Bluesky handle (Benutzernamen) und Passwort zur authentifizierung ein."
+
+#: includes/Settings.php:104
+msgid "Error fetching profile:"
+msgstr "Fehler beim Abruf des Profils:"
+
+#: includes/Render.php:605
+#: build/bluesky/index.js:1
+msgid "Follow"
+msgstr "Folgen"
+
+#. Author URI of the plugin
+#: rrze-bluesky.php
+msgid "https://blogs.fau.de/webworking/"
+msgstr "https://blogs.fau.de/webworking/"
+
+#. Plugin URI of the plugin
+#: rrze-bluesky.php
+msgid "https://www.github.com/rrze-webteam/rrze-bluesky"
+msgstr "https://www.github.com/rrze-webteam/rrze-bluesky"
+
+#: includes/REST.php:390
+msgid "No \"list\" parameter provided. Provide either ?list=... or ?starterPack=...."
+msgstr "Kein \"List\"-Parameter bereitgestellt. Stelle entweder ?list=… oder ?starterPack=… zur Verfügung."
+
+#: includes/REST.php:319
+#: includes/REST.php:378
+msgid "No \"list.uri\" found in the retrieved starter pack."
+msgstr "Keine \"list.uri\" im abgerufenen Starterpack Datensatz gefunden."
+
+#: includes/REST.php:264
+msgid "No \"starterPack\" parameter provided."
+msgstr "Kein Starterpack-Parameter bereitgestellt."
+
+#: includes/REST.php:122
+msgid "No \"uri\" parameter provided."
+msgstr "Kein \"uri\"-Parameter bereitgestellt."
+
+#: includes/REST.php:311
+msgid "No data returned for the given starterPack URI."
+msgstr "Für die eingetragene StarterPack URI konnten keine Daten abgerufen werden."
+
+#: includes/REST.php:422
+msgid "No list data returned for the given AT-URI."
+msgstr "Keine Listendaten für die gegebene AT-URI gefunden."
+
+#: includes/Render.php:343
+msgid "No Post data found."
+msgstr "Kein Beitrag gefunden."
+
+#: includes/REST.php:160
+msgid "No post found for the given URI."
+msgstr "Es wurde kein Beitrag für die angegebene URL gefunden."
+
+#. translators: 1: The plugin name, 2: The error string.
+#: rrze-bluesky.php:119
+msgid "Plugins: %1$s: %2$s"
+msgstr "Plugins: %1$s: %2$s"
+
+#: includes/REST.php:285
+msgid "Provided param is neither a valid at:// URI nor a recognized bsky.app/starter-pack link."
+msgstr "Der angegebene Parameter ist weder eine gültige at:// URI, noch ein gültiger bsky.app/starter-pack Link."
+
+#: includes/REST.php:148
+msgid "Provided URI is neither a valid at:// URI nor a valid bsky.app link."
+msgstr "Angegebene URI ist weder eine gültige at:// URI, noch ein gültiger bsky.app Link."
+
+#: includes/Render.php:320
+#: build/bluesky/index.js:1
+msgid "Read"
+msgstr "Lese"
+
+#: includes/Render.php:322
+#: build/bluesky/index.js:1
+msgid "Read on Bluesky"
+msgstr "Auf Bluesky lesen"
+
+#: includes/Render.php:320
+#: build/bluesky/index.js:1
+msgid "replies on Bluesky"
+msgstr "Antworten auf Bluesky"
+
+#: includes/Settings.php:61
+msgid "Reset Credentials"
+msgstr "Anmeldedaten zurücksetzen"
+
+#: includes/Blocks.php:86
+msgid "RRZE"
+msgstr "RRZE"
+
+#. Plugin Name of the plugin
+#: rrze-bluesky.php
+#: includes/Settings.php:24
+#: includes/Settings.php:25
+msgid "RRZE Bluesky"
+msgstr "RRZE Bluesky"
+
+#. Author of the plugin
+#: rrze-bluesky.php
+msgid "RRZE Webteam"
+msgstr "RRZE Webteam"
+
+#: includes/Settings.php:53
+msgid "Save Changes"
+msgstr "Änderungen speichern"
+
+#: includes/Settings.php:40
+msgid "Settings for RRZE Bluesky Plugin."
+msgstr "Einstellungen für das RRZE Bluesky Plugin"
+
+#. translators: 1: Server PHP version number, 2: Required PHP version number.
+#: rrze-bluesky.php:60
+msgid "The server is running PHP version %1$s. The Plugin requires at least PHP version %2$s."
+msgstr "Auf dem Server läuft PHP-Version %1$s. Das Plugin benötigt mindestens PHP-Version %2$s."
+
+#. translators: 1: Server WordPress version number, 2: Required WordPress version number.
+#: rrze-bluesky.php:67
+msgid "The server is running WordPress version %1$s. The Plugin requires at least WordPress version %2$s."
+msgstr "Auf dem Server läuft WordPress Version %1$s. Das Plugin benötigt mindestens WordPress Version %2$s."
+
+#: includes/Render.php:282
+#: build/bluesky/index.js:1
+msgid "um"
+msgstr "um"
+
+#: includes/REST.php:275
+msgid "Unauthorized to access the requested starter pack."
+msgstr "Du besitzt keine Berechtigung, um das angeforderte StarterPack abzurufen."
