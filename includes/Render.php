@@ -77,7 +77,7 @@ class Render
                 return '<p>' . __("Configuration error: API not available.", "rrze-bluesky") . '</p>';
             }
             $listData = $api->getAllStarterPackData($uri);
-            return $renderer->renderStarterpackList($listData, $hstart);
+            return $renderer->renderStarterpackList($listData, $hstart, $limitWidth);
         }
 
         // Otherwise, if we have a valid post URI, show the single post
@@ -559,7 +559,7 @@ class Render
      * @param [type] $listData
      * @return void
      */
-    public function renderStarterpackList($listData, $hstart = 2)
+    public function renderStarterpackList($listData, $hstart = 2, $limitWidth = true)
     {
         if (!$listData || !isset($listData['list'], $listData['items']) || empty($listData['items'])) {
             return '<p>No list data found.</p>';
@@ -569,7 +569,7 @@ class Render
         $items = $listData['items'];
 
         ob_start(); ?>
-        <div class="wp-block-rrze-bluesky-bluesky">
+        <div class="wp-block-rrze-bluesky-bluesky <?php echo ($limitWidth ? ' bsky-limit-width' : ''); ?>">
             <h<?php echo (int) $hstart; ?>>
                 <?php echo esc_html($list['name']); ?>
             </h<?php echo (int) $hstart; ?>>

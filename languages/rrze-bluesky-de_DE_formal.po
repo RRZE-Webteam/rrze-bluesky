@@ -3,17 +3,20 @@ msgstr ""
 "Project-Id-Version: RRZE Bluesky 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/rrze-bluesky\n"
 "Last-Translator: \n"
-"Language-Team: Deutsch\n"
+"Language-Team: Deutsch (Sie)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2025-02-04T13:33:36+00:00\n"
-"PO-Revision-Date: 2025-02-06 15:06+0000\n"
-"Language: de_DE\n"
+"PO-Revision-Date: 2025-02-06 15:07+0000\n"
+"Language: de_DE_formal\n"
 "X-Generator: Loco https://localise.biz/\n"
 "X-Domain: rrze-bluesky\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 "X-Loco-Version: 2.7.1; wp-6.7.1\n"
+"X-Loco-Fallback: de_DE\n"
+"X-Loco-Template: languages/rrze-bluesky-de_DE.po\n"
+"X-Loco-Template-Mode: PO,JSON\n"
 
 #. Description of the plugin
 #: rrze-bluesky.php
@@ -68,7 +71,7 @@ msgstr "Derzeit verbundener Account:"
 
 #: includes/Settings.php:186
 msgid "Enter your Bluesky handle (username) and password to authenticate."
-msgstr "Gebe deinen Bluesky handle (Benutzernamen) und Passwort zur authentifizierung ein."
+msgstr "Geben Sie einen Bluesky handle (Benutzernamen) und ein Passwort zur Authentifizierung ein."
 
 #: includes/Settings.php:104
 msgid "Error fetching profile:"
@@ -207,4 +210,4 @@ msgstr "um"
 
 #: includes/REST.php:275
 msgid "Unauthorized to access the requested starter pack."
-msgstr "Du besitzt keine Berechtigung, um das angeforderte StarterPack abzurufen."
+msgstr "Sie besitzen keine Berechtigung, um das angeforderte StarterPack abzurufen."
