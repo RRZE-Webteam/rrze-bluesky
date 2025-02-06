@@ -101,7 +101,7 @@ export default function Edit({ attributes, setAttributes }: BskyBlock) {
               )}
             </ToolbarItem>
           </ToolbarGroup>
-          {urlType === "post" && (
+          {(urlType === "post" || urlType === "starterPack") && (
             <WidthLimiterBar
               attributes={attributes}
               setAttributes={(newAttributes) => setAttributes(newAttributes)}

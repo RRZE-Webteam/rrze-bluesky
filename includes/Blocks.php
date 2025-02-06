@@ -47,7 +47,7 @@ class Blocks
 
         $script_handle = generate_block_asset_handle('rrze-bluesky/bluesky', 'editorScript');
         wp_set_script_translations($script_handle, 'rrze-bluesky', plugin_dir_path(__DIR__) . 'languages');
-        load_plugin_textdomain('rrze-bluesky', false, dirname(plugin_basename(__FILE__)) . '/languages');
+        load_plugin_textdomain('rrze-bluesky', false, dirname(plugin_basename(__DIR__)) . '/languages');
     }
 
     /**
