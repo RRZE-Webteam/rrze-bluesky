@@ -3,9 +3,12 @@
 
 namespace RRZE\Bluesky;
 
+/**
+ * Loads and provides access to plugin configuration from a JSON file.
+ */
 class Config {
     private array $config;
-    
+
     /**
      * Config-Konstruktor
      * Lädt die Konfigurationswerte aus der JSON-Datei
@@ -35,7 +38,7 @@ class Config {
         return $this->config[$key] ?? null;
     }
 
-    
+
     /**
      * Alle Konfigurationswerte abrufen
      *

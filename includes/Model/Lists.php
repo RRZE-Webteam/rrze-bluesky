@@ -17,12 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace RRZE\Bluesky;
+namespace RRZE\Bluesky\Model;
 
+/**
+ * Data model representing a Bluesky list.
+ */
 class Lists {
     public string $uri;
     public string $cid;
-    public Profil $creator;
+    public Profile $creator;
     public string $name;
     public string $purpose;
     public string $indexedAt;
@@ -33,11 +36,11 @@ class Lists {
     public ?array $labels;
     public ?array $viewer;
     private ?array $rawdata;
-    
+
     public function __construct(array $data) {
         $this->uri = $data['uri'] ?? '';
         $this->cid = $data['cid'] ?? '';
-        $this->creator = new Profil($data['creator']);
+        $this->creator = new Profile($data['creator']);
         $this->description = $data['description'] ?? '';
         $this->avatar = $data['avatar'] ?? '';
         $this->name = $data['name'] ?? '';
@@ -46,9 +49,9 @@ class Lists {
         $this->viewer = $data['viewer'] ?? null;
         $this->purpose = $data['purpose'] ?? null;
         $this->descriptionFacets = $data['descriptionFacets'] ?? null;
-        $this->listItemCount = (int) ($data['listItemCount'] ?? 0);     
-        
-        // Everything else move in rawdata       
+        $this->listItemCount = (int) ($data['listItemCount'] ?? 0);
+
+        // Everything else move in rawdata
         $usedKeys = [
             'uri',
             'cid',
@@ -66,11 +69,11 @@ class Lists {
         $remaining = array_diff_key($data, array_flip($usedKeys));
         $this->rawdata = $remaining;
     }
-    
+
     public function getRawData(): array {
         return $this->rawdata;
     }
-    
+
     public function getListsView(?string $template = null): string {
         if (empty($template)) {
             $template = '';
@@ -84,8 +87,8 @@ class Lists {
             $template .= "XRPC URL     : #xrpcurl#".PHP_EOL;
             $template .= "Description  : #description#".PHP_EOL;
         }
-        
-         
+
+
         // Platzhalter mit den entsprechenden Werten ersetzen
         $replacements = [
             '#name#' => $this->name ?? 'N/A',
@@ -100,18 +103,18 @@ class Lists {
             '#xrpcurl#' => $this->getBlueSkyXRPCURL()
         ];
 
-                
+
         return str_replace(array_keys($replacements), array_values($replacements), $template);
 
     }
-    
+
     /*
      * get handle of creator
      */
     public function getCreatorHandle(): ?string {
         return $this->creator->handle ?? null;
     }
-    
+
     /**
      * gets public Bluesky-URL for list
      */

@@ -17,17 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+namespace RRZE\Bluesky\Model;
+
 /**
- * Description of Feed
- *
- * @author Anwender
+ * Data model representing a Bluesky feed item.
  */
 class Feed {
     public array $posts;
     public array $reply;
     public array $reason;
     public string $feedContext;
-    
+
     public function __construct(array $posts, array $reply, array $reason, string $feedContext) {
         $this->posts = $posts;
         $this->reply = $reply;

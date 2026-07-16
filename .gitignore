@@ -57,6 +57,9 @@ node_modules/
 # dotenv environment variables file
 .env
 
+#Claude
+Claude.md
+
 # Loco translate ignore
 *.po~
 *.pot~

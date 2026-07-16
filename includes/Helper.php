@@ -4,6 +4,9 @@ namespace RRZE\Bluesky;
 
 defined('ABSPATH') || exit;
 
+/**
+ * Static logging utility. Writes to the WordPress debug log when WP_DEBUG is active.
+ */
 class Helper
 {
     public static function debug($input, string $level = 'i')

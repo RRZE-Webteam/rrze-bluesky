@@ -18,9 +18,12 @@
  */
 
 
-namespace RRZE\Bluesky;
+namespace RRZE\Bluesky\Model;
 
-class Profil {
+/**
+ * Data model representing a Bluesky user profile.
+ */
+class Profile {
     public string $did;
     public string $handle;
     public ?string $createdAt;
@@ -35,7 +38,7 @@ class Profil {
     public ?array $labels;
     public ?array $pinnedPost;
     private array $rawdata;
-    
+
     public function __construct(array $data) {
         $this->did = $data['did'] ?? '';
         $this->handle = $data['handle'] ?? '';
@@ -47,12 +50,12 @@ class Profil {
         $this->indexedAt = $data['indexedAt'] ?? '';
         $this->labels = $data['labels'] ?? null;
         $this->pinnedPost = $data['pinnedPost'] ?? null;
-        
+
         $this->followersCount = (int) ($data['followersCount'] ?? 0);
         $this->followsCount= (int) ($data['followsCount'] ?? 0);
         $this->postsCount= (int) ($data['postsCount'] ?? 0);
-        
-        // Everything else move in rawdata       
+
+        // Everything else move in rawdata
         $usedKeys = [
             'did',
             'handle',
@@ -71,12 +74,12 @@ class Profil {
         $remaining = array_diff_key($data, array_flip($usedKeys));
         $this->rawdata = $remaining;
     }
-    
+
     public function getRawData(): array {
         return $this->rawdata;
     }
-    
-    public function getProfilView(?string $template = null): string {
+
+    public function getProfileView(?string $template = null): string {
         if (empty($template)) {
             $template = '';
             $template .= "Handle     : #handle#".PHP_EOL;
@@ -90,7 +93,7 @@ class Profil {
             $template .= "XRPC URL   : #xrpcurl#".PHP_EOL;
             $template .= "Description: #description#".PHP_EOL;
         }
-        
+
 
         // Platzhalter mit den entsprechenden Werten ersetzen
         $replacements = [
@@ -101,22 +104,22 @@ class Profil {
             '#description#' => $this->description ?? 'N/A',
             '#followersCount#' => $this->followersCount ?? '0',
             '#followsCount#' => $this->followsCount ?? '0',
-            '#postCount#' => $this->postCount ?? '0',
+            '#postCount#' => $this->postsCount ?? '0',
             '#avatar#' => $this->avatar ?? 'N/A',
             '#banner#' => $this->banner ?? 'N/A',
             '#blueskyurl#'  => $this->getBlueskyURL(),
             '#xrpcurl#' => $this->getBlueSkyXRPCURL()
         ];
 
-                
+
         return str_replace(array_keys($replacements), array_values($replacements), $template);
 
     }
-    
+
     /*
      * Get public Bluesky URL for profil
      */
-    public function getBlueskyURL(): string {       
+    public function getBlueskyURL(): string {
         return "https://bsky.app/profile/{$this->handle}";
     }
      /**

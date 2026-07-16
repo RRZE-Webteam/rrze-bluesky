@@ -4,7 +4,7 @@
 Plugin Name:    RRZE Bluesky
 Plugin URI:     https://www.github.com/rrze-webteam/rrze-bluesky
 Description:    A WordPress Plugin to embed information and posts from Bluesky on your website.
-Version:        1.0.0
+Version:        1.0.1
 Author:         RRZE Webteam
 Author URI:     https://blogs.fau.de/webworking/
 License:        GNU General Public License v3
@@ -18,8 +18,8 @@ defined('ABSPATH') || exit;
 
 use RRZE\Bluesky\Main;
 
-const RRZE_PHP_VERSION = '7.4';
-const RRZE_WP_VERSION = '5.8';
+const RRZE_PHP_VERSION = '8.2';
+const RRZE_WP_VERSION = '6.0';
 
 /**
  * SPL Autoloader (PSR-4).
