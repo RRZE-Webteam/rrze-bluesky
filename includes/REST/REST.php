@@ -18,32 +18,15 @@ class REST
 {
   private ?API $api = null;
 
+
   /**
-   * Initializes the REST endpoint handler and authenticates against the Bluesky API.
+   * Registers REST API route handlers.
    */
   public function __construct()
   {
     add_action('rest_api_init', [$this, 'registerRestRoutes']);
-
-    $data_encryption = new Encryption();
-    $username = $data_encryption->decrypt(get_option('rrze_bluesky_username'));
-    $password = $data_encryption->decrypt(get_option('rrze_bluesky_password'));
-
-    // Instantiate the API
-    $api = new API($username, $password);
-    $this->setApi($api);
   }
-
-  /**
-   * Setter for API
-   *
-   * @param API $api
-   * @return void
-   */
-  public function setApi(API $api): void
-  {
-    $this->api = $api;
-  }
+  
 
   /**
    * Getter for API client.
@@ -52,6 +35,12 @@ class REST
    */
   public function getApi(): ?API
   {
+    if ($this->api === null) {
+      $data_encryption = new Encryption();
+      $username = $data_encryption->decrypt(get_option('rrze_bluesky_username'));
+      $password = $data_encryption->decrypt(get_option('rrze_bluesky_password'));
+      $this->api = new API($username, $password);
+    }
     return $this->api;
   }
 
