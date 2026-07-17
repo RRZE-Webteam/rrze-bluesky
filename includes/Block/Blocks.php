@@ -48,12 +48,12 @@ class Blocks
    */
   private function registerBlocksAndTranslations(): void
   {
-    register_block_type(plugin_dir_path(__DIR__) . 'build/bluesky', [
+    register_block_type(dirname(__DIR__, 2)  . '/build/bluesky', [
       'render_callback' => [Render::class, 'renderBlock'],
     ]);
 
     $script_handle = generate_block_asset_handle('rrze-bluesky/bluesky', 'editorScript');
-    wp_set_script_translations($script_handle, 'rrze-bluesky', plugin_dir_path(__DIR__) . 'languages');
+    wp_set_script_translations($script_handle, 'rrze-bluesky', dirname(__DIR__, 2) . '/languages');
     load_plugin_textdomain('rrze-bluesky', false, dirname(plugin_basename(__DIR__)) . '/languages');
   }
 
@@ -64,7 +64,7 @@ class Blocks
    * @param WP_Post $post Current post object.
    * @return array Modified block categories.
    */
-  public function addBlockCategory($categories, $post): array
+  public function addBlockCategory(array $categories, $post): array
   {
     // Check if there is already a RRZE category present
     foreach ($categories as $category) {

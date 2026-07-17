@@ -19,7 +19,7 @@ class REST
   private ?API $api = null;
 
   /**
-   * Initialises the REST endpoint handler and authenticates against the Bluesky API.
+   * Initializes the REST endpoint handler and authenticates against the Bluesky API.
    */
   public function __construct()
   {

@@ -4,6 +4,12 @@ namespace RRZE\Bluesky;
 
 defined('ABSPATH') || exit;
 
+/**
+ * Provides metadata and path/URL helpers for the plugin.
+ *
+ * Loaded via the main plugin file and used throughout the plugin
+ * to resolve paths, URLs and the current version.
+ */
 class Plugin
 {
     /**
@@ -37,18 +43,19 @@ class Plugin
     protected $version;
 
     /**
-     * __construct method
-     * @param string $pluginFile The full path and filename of the plugin.
+     * @param string $pluginFile Absolute path to the main plugin file.
      */
     public function __construct(string $pluginFile)
     {
         $this->pluginFile = $pluginFile;
     }
 
-    /**
-     * loaded method
-     */
-    public function loaded()
+  /**
+   * Initialises all plugin metadata by chaining the setter methods.
+   *
+   * @return void
+   */
+  public function loaded(): void
     {
         $this->setBasename()
             ->setDirectory()
@@ -57,8 +64,8 @@ class Plugin
     }
 
     /**
-     * getFile method
      * Get the full path and filename of the plugin.
+     *
      * @return string The full path and filename.
      */
     public function getFile(): string
@@ -67,8 +74,8 @@ class Plugin
     }
 
     /**
-     * getBasename method
      * Get the basename of the plugin.
+     *
      * @return string The basename.
      */
     public function getBasename(): string
@@ -77,19 +84,19 @@ class Plugin
     }
 
     /**
-     * setBasename method
      * Set the basename of the plugin.
-     * @return object This Plugin object.
+     *
+     * @return static This Plugin object.
      */
-    public function setBasename(): object
+    public function setBasename(): static
     {
         $this->basename = plugin_basename($this->pluginFile);
         return $this;
     }
 
     /**
-     * getDirectory method
      * Get the filesystem directory path (with trailing slash) for the plugin.
+     *
      * @return string The filesystem directory path.
      */
     public function getDirectory(): string
@@ -98,19 +105,19 @@ class Plugin
     }
 
     /**
-     * setDirectory method
      * Set the filesystem directory path (with trailing slash) for the plugin.
-     * @return object This Plugin object.
+     *
+     * @return static This Plugin object.
      */
-    public function setDirectory(): object
+    public function setDirectory(): static
     {
         $this->directory = rtrim(plugin_dir_path($this->pluginFile), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
         return $this;
     }
 
     /**
-     * getPath method
      * Get the filesystem directory path (with trailing slash) for the plugin.
+     *
      * @param string $path The path name.
      * @return string The filesystem directory path.
      */
@@ -120,8 +127,8 @@ class Plugin
     }
 
     /**
-     * getUrl method
      * Get the URL directory path (with trailing slash) for the plugin.
+     *
      * @param string $path The path name.
      * @return string The URL directory path.
      */
@@ -131,19 +138,19 @@ class Plugin
     }
 
     /**
-     * setUrl method
      * Set the URL directory path (with trailing slash) for the plugin.
-     * @return object This Plugin object.
+     *
+     * @return static This Plugin object.
      */
-    public function setUrl(): object
+    public function setUrl(): static
     {
         $this->url = rtrim(plugin_dir_url($this->pluginFile), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
         return $this;
     }
 
     /**
-     * getSlug method
      * Get the slug of the plugin.
+     *
      * @return string The slug.
      */
     public function getSlug(): string
@@ -152,8 +159,8 @@ class Plugin
     }
 
     /**
-     * getVersion method
      * Get the version of the plugin.
+     *
      * @return string The version.
      */
     public function getVersion(): string
@@ -165,11 +172,11 @@ class Plugin
     }
 
     /**
-     * getVersion method
      * Set the version of the plugin.
-     * @return object This Plugin object.
+     *
+     * @return static This Plugin object.
      */
-    public function setVersion(): object
+    public function setVersion(): static
     {
         $headers = ['Version' => 'Version'];
         $fileData = get_file_data($this->pluginFile, $headers, 'plugin');
@@ -179,11 +186,14 @@ class Plugin
         return $this;
     }
 
-    /**
-     * __call method
-     * Method overloading.
-     */
-    public function __call(string $name, array $arguments)
+  /**
+   * Handles calls to undefined methods by logging an error.
+   *
+   * @param string $name      The method name that was called.
+   * @param array  $arguments The arguments passed to the method.
+   * @return void
+   */
+  public function __call(string $name, array $arguments): void
     {
         if (!method_exists($this, $name)) {
             $message = sprintf(__('Call to undefined method %1$s::%2$s', 'rrze-bluesky'), __CLASS__, $name);

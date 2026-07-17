@@ -1,4 +1,5 @@
 import { registerBlockType } from '@wordpress/blocks';
+import { useBlockProps } from '@wordpress/block-editor';
 
 import Edit from './edit';
 import save from './save';
@@ -32,4 +33,18 @@ registerBlockType( metadata.name as any, {
 
 	// @see ./save.js
 	save,
+
+  deprecated: [
+    {
+      save({ attributes }: { attributes: { title: string } }) {
+        const blockProps = useBlockProps.save();
+        return (
+          <div {...blockProps}>
+            <h2>Hello World! {attributes.title}</h2>
+          </div>
+        );
+      }
+    }
+  ]
+
 } as any );

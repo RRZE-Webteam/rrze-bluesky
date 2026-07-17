@@ -88,8 +88,8 @@ export default function Edit({ attributes, setAttributes }: BskyBlock) {
         )}
       </InspectorControls>
       {postUrl !== "" && urlType !== "unknown" && (
-        <BlockControls>
-          <ToolbarGroup>
+        <BlockControls controls={[]}>
+        <ToolbarGroup>
             <ToolbarItem>
               {() => (
                 <HeadingSelector
@@ -134,9 +134,7 @@ export default function Edit({ attributes, setAttributes }: BskyBlock) {
       )}
       {urlType === "unknown" && postUrl !== "" && (
         <Notice status="error" isDismissible={false}>
-          {__(
-            "Invalid URL. Please enter a valid Post or StarterPack URL.",
-            "rrze-bluesky",
+          {__("Invalid URL. Please enter a valid Post or StarterPack URL.", "rrze-bluesky",
           )}
         </Notice>
       )}

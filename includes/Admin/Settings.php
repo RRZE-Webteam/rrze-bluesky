@@ -13,6 +13,9 @@ defined('ABSPATH') || exit;
  */
 class Settings
 {
+  /**
+   * Registers admin hooks for the settings page.
+   */
   public function __construct()
   {
     add_action('admin_menu', [$this, 'addSettingsPage']);
@@ -21,8 +24,10 @@ class Settings
 
   /**
    * Create a submenu item under "Settings" in WP Admin.
+   *
+   * @return void
    */
-  public function addSettingsPage()
+  public function addSettingsPage(): void
   {
     add_submenu_page(
       'options-general.php',
@@ -36,8 +41,10 @@ class Settings
 
   /**
    * Render the actual Settings page in WP Admin.
+   *
+   * @return void
    */
-  public function renderSettingsPage()
+  public function renderSettingsPage(): void
   {
     ?>
     <div class="wrap">
@@ -76,10 +83,12 @@ class Settings
   }
 
   /**
-   * Example method to demonstrate a profile fetch with the saved username/password.
-   * Displays the user’s Bluesky profile below the settings form if valid credentials.
+   * Fetches and displays the connected Bluesky profile below the settings form.
+   *
+   * @param string $encryptedUsername The encrypted username from the database.
+   * @return void
    */
-  public function printExampleApiOutput($encryptedUsername)
+  public function printExampleApiOutput(string $encryptedUsername): void
   {
     // Decrypt the stored handle:
     $data_encryption = new Encryption();
@@ -103,7 +112,7 @@ class Settings
       $renderer->setApi($api);
 
       // Render the personal profile card:
-      echo '<h2>' . __("Currently connected Bluesky-User:", "rrze-bluesky") . '</h2>';
+      echo '<h2>' . esc_html__("Currently connected Bluesky-User:", "rrze-bluesky") . '</h2>';
       echo $renderer->renderPersonalProfile($decryptedUsername);
     } catch (\Exception $e) {
       echo '<p>' . esc_html__('Error fetching profile:', 'rrze-bluesky') . ' ' . esc_html($e->getMessage()) . '</p>';
@@ -112,8 +121,10 @@ class Settings
 
   /**
    * Initialize the settings (run once on admin_init).
+   *
+   * @return void
    */
-  public function initializeSettings()
+  public function initializeSettings(): void
   {
     $this->handleResetCredentials();
     $this->addOption();
@@ -121,9 +132,11 @@ class Settings
   }
 
   /**
-   * /* Ensure plugin options exist in the database with default empty values.
+   * Ensure plugin options exist in the database with default empty values.
+   *
+   * @return void
    */
-  public function addOption()
+  public function addOption(): void
   {
     if (!get_option('rrze_bluesky_password')) {
       add_option('rrze_bluesky_password', '', '', 'yes');
@@ -136,8 +149,10 @@ class Settings
 
   /**
    * Register settings, sections, and fields with WP’s Settings API.
+   *
+   * @return void
    */
-  public function registerSettings()
+  public function registerSettings(): void
   {
     register_setting(
       'rrze-bluesky-settings-group',
@@ -185,16 +200,20 @@ class Settings
 
   /**
    * Settings section intro text.
+   *
+   * @return void
    */
-  public function settingsSectionCallback()
+  public function settingsSectionCallback(): void
   {
     echo '<p>' . esc_html__('Enter your Bluesky handle (username) and password to authenticate.', 'rrze-bluesky') . '</p>';
   }
 
   /**
    * Username (handle) field callback.
+   *
+   * @return void
    */
-  public function apiUsernameFieldCallback()
+  public function apiUsernameFieldCallback(): void
   {
     $data_encryption = new Encryption();
     $decryptedUsername = $data_encryption->decrypt(get_option('rrze_bluesky_username'));
@@ -204,19 +223,23 @@ class Settings
 
   /**
    * Password field callback (mask if stored).
+   *
+   * @return void
    */
-  public function apiPasswordFieldCallback()
+  public function apiPasswordFieldCallback(): void
   {
-    $token = get_option('rrze_bluesky_password') || '';
-    $displayValue = (!empty($token) || $token = '') ? str_repeat('*', 8) : '';
-
+    $stored = get_option('rrze_bluesky_password') ?: '';
+    $displayValue = !empty($stored) ? str_repeat('*', 8) : '';
     echo '<input type="password" name="rrze_bluesky_password" value="' . esc_attr($displayValue) . '" />';
   }
 
   /**
-   * Sanitize & encrypt the API key/username/password before saving to DB.
+   * Sanitizes and encrypts a credential value before saving to the database.
+   *
+   * @param string $input The raw input value.
+   * @return string The encrypted value, or an empty string if input is empty.
    */
-  public function sanitizeApiKey($input)
+  public function sanitizeApiKey(string $input): string
   {
     $clean = sanitize_text_field($input);
 
@@ -232,8 +255,10 @@ class Settings
   /**
    * Handle the reset credentials form submission.
    * Deletes stored credentials and clears authentication transients.
+   *
+   * @return void
    */
-  public function handleResetCredentials()
+  public function handleResetCredentials(): void
   {
     if (!isset($_POST['rrze_bluesky_reset'])) {
       return;
