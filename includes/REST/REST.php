@@ -26,7 +26,7 @@ class REST
   {
     add_action('rest_api_init', [$this, 'registerRestRoutes']);
   }
-  
+
 
   /**
    * Getter for API client.
