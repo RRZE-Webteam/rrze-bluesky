@@ -37,6 +37,10 @@
     "widthLimiter": {
       "type": "boolean",
       "default": true
+    },
+    "publicTimeline": {
+      "type": "boolean",
+      "default": false
     }
   },
   "textdomain": "rrze-bluesky",

@@ -210,15 +210,15 @@ export default function PublicTimeline() {
             {/* Footer: Post Stats */}
             <footer>
               <div className="publication-time">
-                {author.createdAt && (
-                  <time dateTime={author.createdAt}>
-                    {new Date(author.createdAt).toLocaleDateString("de-DE", {
+                {record.createdAt && (
+                  <time dateTime={record.createdAt}>
+                    {new Date(record.createdAt).toLocaleDateString("de-DE", {
                       day: "2-digit",
                       month: "short",
                       year: "numeric",
                     })}{" "}
                     {__("um", "rrze-bluesky")}{" "}
-                    {new Date(author.createdAt).toLocaleTimeString("de-DE", {
+                    {new Date(record.createdAt).toLocaleTimeString("de-DE", {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}

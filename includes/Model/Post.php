@@ -26,6 +26,7 @@ class Post
   public ?array $viewer;
   public ?array $labels;
   private array $rawdata;
+  public ?array $record;
 
 
   /**
@@ -52,6 +53,14 @@ class Post
     $this->author = new Profile($data['author']);
     $this->viewer = $data['viewer'] ?? null;
     $this->labels = $data['labels'] ?? null;
+    $this->record = [
+      'text'     => $data['record']['text'] ?? '',
+      'createdAt' => $data['record']['createdAt'] ?? '',
+      'embed'    => $data['record']['embed'] ?? null,
+      'facets'   => $data['record']['facets'] ?? null,
+      'langs'    => $data['record']['langs'] ?? null,
+    ];
+
 
     // Store unmapped fields for extensibility
     $usedKeys = [

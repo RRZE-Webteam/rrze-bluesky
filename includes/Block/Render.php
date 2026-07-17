@@ -228,13 +228,13 @@ class Render
       $html .= '<figure class="bsky-external-embed">';
 
       if ($extThumb) {
-        // $html .= '<a href="' . esc_url($extUri) . '" target="_blank" rel="noopener noreferrer">';
+        $html .= '<a href="' . esc_url($extUri) . '" target="_blank" rel="noopener noreferrer">';
         $html .= '<img src="' . esc_url($extThumb) . '" alt="' . esc_attr($extTitle) . '">';
-        // $html .= '</a>';
+        $html .= '</a>';
       }
 
       // figcaption with link to external article
-      $html .= '<figcaption onclick="location.href=\'' . esc_url($extUri) . '\';" class="bsky-embed-caption" aria-label="' . esc_attr($extTitle) . '">';
+      $html .= '<figcaption class="bsky-embed-caption" aria-label="' . esc_attr($extTitle) . '">';
       if (!empty($extUri)) {
         $html .= '<h4 class="bsky-external-heading"><a href="' . esc_url($extUri) . '" target="_blank" rel="noopener noreferrer">'
           . esc_html($extTitle) . '</a></h4>';
@@ -406,17 +406,24 @@ class Render
    */
   public function retrievePublicTimelineInformation($limit = 10): ?array
   {
-    $response = wp_remote_get(home_url('wp-json/rrze-bluesky/v1/public-timeline?limit=' . $limit), [
-      'headers' => [
-        'X-RRZE-Secret-Key' => get_option('rrze_bluesky_secret_key'),
-      ],
-    ]);
-    if (is_wp_error($response)) {
+    $api = $this->getApi();
+    if (!$api) {
+      Helper::debug('API object not available. Please check your credentials.');
       return null;
     }
-    $body = wp_remote_retrieve_body($response);
-    $decoded = json_decode($body, true);
-    return $decoded;
+
+    $cache_key = 'rrze_bluesky_public_timeline';
+    $cached = get_transient($cache_key);
+    if ($cached !== false) {
+      return $cached;
+    }
+
+    $timeline = $api->getPublicTimeline();
+    if ($timeline) {
+      set_transient($cache_key, $timeline, HOUR_IN_SECONDS);
+    }
+
+    return $timeline;
   }
 
   /**

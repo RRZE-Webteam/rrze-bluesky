@@ -237,6 +237,7 @@ class API
     $this->requireAccessToken();
     if (empty($search['actor'])) {
       Helper::debug('Required field actor (of type at-identifier) missing.');
+      return null;
     }
     $url = "{$this->baseUrl}/app.bsky.graph.getLists";
     $response = $this->makeRequest($url, "GET", $search);
@@ -265,6 +266,7 @@ class API
     $this->requireAccessToken();
     if (empty($search['list'])) {
       Helper::debug('Required field list (of type at-uri) missing.');
+      return null;
     }
     $url = "{$this->baseUrl}/app.bsky.graph.getList";
 

@@ -246,6 +246,7 @@ class REST
     return $timeline;
   }
 
+
   /**
    * Check if the current user is allowed to access REST endpoints.
    *
@@ -254,7 +255,7 @@ class REST
    */
   public function permissionCheck(WP_REST_Request $request): true|WP_Error
   {
-    if (is_user_logged_in()) {
+    if (current_user_can('edit_posts')) {
       return true;
     }
 
@@ -264,6 +265,7 @@ class REST
       ['status' => 401]
     );
   }
+
 
   /**
    * Handler for GET /rrze-bluesky/v1/starter-pack

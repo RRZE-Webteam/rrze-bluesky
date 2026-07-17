@@ -64,7 +64,7 @@ export default function StarterPackList({ listUri, hstart }: ListProps) {
 
   if (error) {
     console.log(error);
-    if (error.data.status === 401) {
+    if (error.data?.status === 401) {
       return (
         <>
           <Notice status="error" isDismissible={false}>

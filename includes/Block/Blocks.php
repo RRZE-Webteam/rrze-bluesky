@@ -35,7 +35,7 @@ class Blocks
   {
     wp_register_style(
       'rrze-bluesky',
-      plugins_url('css/rrze-bluesky.css', __DIR__),
+      plugins_url('css/rrze-bluesky.css', dirname(__DIR__, 2) . '/rrze-bluesky.php'),
       [],
       filemtime(plugin_dir_path(__DIR__) . 'css/rrze-bluesky.css')
     );

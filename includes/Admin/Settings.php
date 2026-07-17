@@ -46,6 +46,12 @@ class Settings
    */
   public function renderSettingsPage(): void
   {
+    if (isset($_GET['reset']) && $_GET['reset'] === 'success') {
+      echo '<div class="notice notice-success is-dismissible"><p>'
+        . esc_html__('Bluesky credentials reset successfully.',
+          'rrze-bluesky')
+        . '</p></div>';
+    }
     ?>
     <div class="wrap">
       <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
@@ -229,9 +235,11 @@ class Settings
   public function apiPasswordFieldCallback(): void
   {
     $stored = get_option('rrze_bluesky_password') ?: '';
-    $displayValue = !empty($stored) ? str_repeat('*', 8) : '';
-    echo '<input type="password" name="rrze_bluesky_password" value="' . esc_attr($displayValue) . '" />';
+    $placeholder = !empty($stored)
+      ? esc_attr__('Password is set — leave blank to keep', 'rrze-bluesky') : '';
+    echo '<input type="password" name="rrze_bluesky_password" value="" placeholder="' . $placeholder . '" />';
   }
+
 
   /**
    * Sanitizes and encrypts a credential value before saving to the database.
@@ -241,14 +249,16 @@ class Settings
    */
   public function sanitizeApiKey(string $input): string
   {
+    if ($input === null || $input === '') {
+      return '';
+    }
     $clean = sanitize_text_field($input);
-
     if ($clean === '') {
       return '';
     }
-
     $data_encryption = new Encryption();
-    return $data_encryption->encrypt($clean);
+    $encrypted = $data_encryption->encrypt($clean);
+    return is_string($encrypted) ? $encrypted : '';
   }
 
 
@@ -273,14 +283,10 @@ class Settings
     delete_transient('rrze_bluesky_refresh_token');
     delete_transient('rrze_bluesky_access_token');
 
-
-    unset($_POST['rrze_bluesky_username']);
-    unset($_POST['rrze_bluesky_password']);
-
-    add_action('admin_notices', function () {
-      echo '<div class="notice notice-success is-dismissible"><p>'
-        . esc_html__('Bluesky credentials reset successfully.', 'rrze-bluesky')
-        . '</p></div>';
-    });
+    wp_redirect(add_query_arg(
+      ['page' => 'rrze-bluesky', 'reset' => 'success'],
+      admin_url('options-general.php')
+    ));
+    exit;
   }
 }
