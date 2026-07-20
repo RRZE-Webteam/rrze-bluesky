@@ -52,6 +52,10 @@ class Encryption
       return $value;
     }
 
+    if (!$this->key || !$this->salt) {
+      return false;
+    }
+
     $method = 'aes-256-ctr';
     $ivlen = openssl_cipher_iv_length($method);
     $iv = openssl_random_pseudo_bytes($ivlen);
@@ -78,6 +82,10 @@ class Encryption
   {
     if (!extension_loaded('openssl')) {
       return $raw_value;
+    }
+
+    if (!$this->key || !$this->salt) {
+      return false;
     }
 
     $raw_value = base64_decode($raw_value, true); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode
@@ -109,8 +117,8 @@ class Encryption
       return LOGGED_IN_KEY;
     }
 
-    // If this is reached, you're either not on a live site or have a serious security issue.
-    return 'this-is-a-fallback-key-but-not-secure';
+    // Encryption is not possible without a proper key.
+    return false;
   }
 
   /**

@@ -139,7 +139,8 @@ class REST
     $cache_key = 'rrze_bluesky_post_' . md5($uri);
     $cached_post = get_transient($cache_key);
 
-    if ($cached_post instanceof \RRZE\Bluesky\Model\Post) {
+    if ($cached_post instanceof \RRZE\Bluesky\Model\Post && !empty($cached_post->uri)
+    ) {
       return new WP_REST_Response($cached_post, 200);
     }
 
@@ -225,23 +226,31 @@ class REST
    * Handle GET /rrze-bluesky/v1/public-timeline
    * Returns the authenticated user's public timeline, cached for one hour.
    *
-   * @return array|null Timeline data or null on failure.
+   * @return WP_REST_Response|WP_Error
    */
-  public function getPublicTimeline(): ?array
+  public function getPublicTimeline(): WP_REST_Response|WP_Error
   {
     $cache_key = 'rrze_bluesky_public_timeline';
     $cached_timeline = get_transient($cache_key);
 
     if ($cached_timeline !== false) {
-      return $cached_timeline;
+      return new WP_REST_Response($cached_timeline, 200);
     }
 
     $api = $this->getApi();
 
     $timeline = $api->getPublicTimeline();
 
-    // Cache the result for 1 hour
+    if (!$timeline) {
+          return new WP_Error(
+              'timeline_unavailable',
+              __('Could not retrieve public timeline.', 'rrze-bluesky'),
+              ['status' => 503]
+          );
+      }
+
     set_transient($cache_key, $timeline, HOUR_IN_SECONDS);
+      return new WP_REST_Response($timeline, 200);
 
     return $timeline;
   }

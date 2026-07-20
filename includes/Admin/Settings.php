@@ -145,11 +145,11 @@ class Settings
   public function addOption(): void
   {
     if (!get_option('rrze_bluesky_password')) {
-      add_option('rrze_bluesky_password', '', '', 'yes');
+      add_option('rrze_bluesky_password', '', 'false');
     }
 
     if (!get_option('rrze_bluesky_username')) {
-      add_option('rrze_bluesky_username', '', '', 'yes');
+      add_option('rrze_bluesky_username', '', 'false');
     }
   }
 
@@ -175,7 +175,7 @@ class Settings
       'rrze_bluesky_password',
       [
         'type' => 'string',
-        'sanitize_callback' => [$this, 'sanitizeApiKey'],
+        'sanitize_callback' => [$this, 'sanitizePassword'],
         'default' => null,
       ]
     );
@@ -256,6 +256,27 @@ class Settings
     if ($clean === '') {
       return '';
     }
+    $data_encryption = new Encryption();
+    $encrypted = $data_encryption->encrypt($clean);
+    return is_string($encrypted) ? $encrypted : '';
+  }
+
+  /**
+   * Sanitizes and encrypts the password before saving.
+   * If the input is empty, the existing stored value is kept.
+   *
+   * @param string|null $input The raw password input.
+   * @return string The encrypted password, or the existing value if input is empty.
+   */
+  public function sanitizePassword(?string $input): string
+  {
+    if ($input === null || $input === '') {
+      return get_option('rrze_bluesky_password', '');
+      }
+    $clean = sanitize_text_field($input);
+    if ($clean === '') {
+      return get_option('rrze_bluesky_password', '');
+      }
     $data_encryption = new Encryption();
     $encrypted = $data_encryption->encrypt($clean);
     return is_string($encrypted) ? $encrypted : '';

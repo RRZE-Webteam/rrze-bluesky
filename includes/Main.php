@@ -37,7 +37,7 @@ class Main
   private function maybeClearTransientsAfterUpdate(): void
   {
     $storedVersion  = get_option('rrze_bluesky_version', '');
-    $currentVersion = '1.1.0';
+    $currentVersion = RRZE_BLUESKY_VERSION;
 
     if ($storedVersion === $currentVersion) {
       return;

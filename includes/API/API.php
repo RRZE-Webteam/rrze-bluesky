@@ -3,6 +3,7 @@
 namespace RRZE\Bluesky\API;
 
 use RRZE\Bluesky\Helper;
+use RRZE\Bluesky\Encryption;
 use RRZE\Bluesky\Model\Lists;
 use RRZE\Bluesky\Model\Profile;
 use RRZE\Bluesky\Model\Post;
@@ -25,16 +26,20 @@ class API
     $this->username = $username;
     $this->password = $password;
 
+    $encryption = new Encryption();
+
     // I | Attempt: Load Tokens from Transient if set
     $storedRefreshToken = get_transient('rrze_bluesky_refresh_token');
     $storedAccessToken = get_transient('rrze_bluesky_access_token');
 
     if ($storedRefreshToken) {
-      $this->refreshToken = $storedRefreshToken;
+      $decrypted = $encryption->decrypt($storedRefreshToken);
+      $this->refreshToken = $decrypted ?: null;
     }
 
     if ($storedAccessToken) {
-      $this->token = $storedAccessToken;
+      $decrypted = $encryption->decrypt($storedAccessToken);
+      $this->token = $decrypted ?: null;
     }
 
     // II | Attempt: Login if no tokens are set
@@ -71,9 +76,11 @@ class API
       $this->token = $response['accessJwt'];
       $this->refreshToken = $response['refreshJwt'];
 
+      $encryption = new Encryption();
+
       // Store the tokens as transients
-      set_transient('rrze_bluesky_access_token', $this->token, HOUR_IN_SECONDS);
-      set_transient('rrze_bluesky_refresh_token', $this->refreshToken, DAY_IN_SECONDS);
+      set_transient('rrze_bluesky_access_token', $encryption->encrypt($this->token), HOUR_IN_SECONDS);
+      set_transient('rrze_bluesky_refresh_token', $encryption->encrypt($this->refreshToken), DAY_IN_SECONDS);
 
       return $this->token;
     }
@@ -151,7 +158,7 @@ class API
     $decoded = json_decode($body, true);
 
     if (json_last_error() !== JSON_ERROR_NONE || empty($decoded['accessJwt']) || empty($decoded['refreshJwt'])) {
-      Helper::debug("Invalid refresh response: " . $body);
+      Helper::debug("Invalid refresh response: missing or malformed token fields.");
       $this->removeStaleRefreshAndAccessToken();
       return false;
     }
@@ -160,9 +167,11 @@ class API
     $this->token = $decoded['accessJwt'];
     $this->refreshToken = $decoded['refreshJwt'];
 
+    $encryption = new Encryption();
+
     // Re-set the transients for the new tokens
-    set_transient('rrze_bluesky_access_token', $this->token, HOUR_IN_SECONDS);
-    set_transient('rrze_bluesky_refresh_token', $this->refreshToken, DAY_IN_SECONDS);
+    set_transient('rrze_bluesky_access_token', $encryption->encrypt($this->token), HOUR_IN_SECONDS);
+    set_transient('rrze_bluesky_refresh_token', $encryption->encrypt($this->refreshToken), DAY_IN_SECONDS);
 
     Helper::debug("Access token successfully refreshed.");
     return true;
@@ -318,6 +327,7 @@ class API
     $this->requireAccessToken();
     if (empty($search['actor'])) {
       Helper::debug('Required field actor missing.');
+      return null;
     }
 
     $url = "{$this->baseUrl}/app.bsky.actor.getProfile";
@@ -349,6 +359,7 @@ class API
     $this->requireAccessToken();
     if (empty($starterPackUri)) {
       Helper::debug("starterPack parameter is required.");
+      return null;
     }
 
     $url = "{$this->baseUrl}/app.bsky.graph.getStarterPack";

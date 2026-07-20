@@ -5,7 +5,6 @@ namespace RRZE\Bluesky\Block;
 use RRZE\Bluesky\API\API;
 use RRZE\Bluesky\Encryption;
 use RRZE\Bluesky\Helper;
-use RRZE\Bluesky\REST\REST;
 use RRZE\Bluesky\Model\Post;
 
 /**
@@ -126,18 +125,32 @@ class Render
 
     $cache_key = 'rrze_bluesky_post_' . md5($uri);
     $cached_post = get_transient($cache_key);
-    if ($cached_post instanceof Post) {
+    if ($cached_post instanceof Post && !empty($cached_post->uri)) {
       return $cached_post;
     }
 
     if (!str_starts_with($uri, 'at://')) {
-      $rest = new REST();
-      $converted = $rest->convertBskyLinkToAtUri($uri);
-      if (!$converted) {
+      $host     = parse_url($uri, PHP_URL_HOST);
+      $path     = parse_url($uri, PHP_URL_PATH);
+      $segments = explode('/', trim((string)$path, '/'));
+
+      if (!$host || !$path || !str_contains($host, 'bsky.app')
+        || count($segments) < 4
+        || $segments[0] !== 'profile'
+        || $segments[2] !== 'post'
+      ) {
         Helper::debug('Failed to convert Bluesky link to AT URI.');
         return null;
       }
-      $uri = $converted;
+
+      $profile = $api->getProfile(['actor' => $segments[1]]);
+      if (!$profile || !$profile->did) {
+        Helper::debug('Failed to resolve Bluesky handle to DID.');
+        return null;
+      }
+
+      $uri = sprintf('at://%s/app.bsky.feed.post/%s', $profile->did,
+        $segments[3]);
     }
 
     $post = $api->getPosts($uri);
@@ -658,7 +671,7 @@ class Render
 
     $profileData = $api->getProfile(['actor' => $bskyHandle]);
     if (!$profileData) {
-      return '<p>' . esc_html__('Bluesky profile found for: ', 'rrze-bluesky') . esc_html($bskyHandle) . '</p>';
+      return '<p>' . esc_html__('No Bluesky profile found for: ', 'rrze-bluesky') . esc_html($bskyHandle) . '</p>';
     }
 
     $displayName = !empty($profileData->displayName) ? $profileData->displayName : $bskyHandle;
